@@ -374,7 +374,7 @@ table { border-collapse: collapse; }
 @media (min-width: 1140px) { .menu-toggle { display: none; } }
 
 .mobile-menu {
-  position: fixed; inset: 0; z-index: 110;
+  position: fixed; inset: 0; z-index: 95;
   background: var(--laranja-vibrante);
   color: var(--preto-suave);
   clip-path: circle(0% at calc(100% - 44px) 38px);
@@ -1277,7 +1277,10 @@ table { border-collapse: collapse; }
 .footer-big { font-family: var(--font-display); font-weight: 700; font-size: 24vw; line-height: .75; text-align: center; color: rgba(255, 255, 255, .04); white-space: nowrap; margin-bottom: -4vw; user-select: none; pointer-events: none; }
 
 /* Estados iniciais das animações (somente quando JS + movimento ativos) */
-.js-motion [data-reveal], .js-motion [data-stagger] > * { opacity: 0; }
+.js-motion [data-reveal], .js-motion [data-stagger] > *, .js-motion [data-intro-fade] { opacity: 0; }
+.js-motion [data-split] { visibility: hidden; }
+.menu-open .site-header { color: var(--preto-suave) !important; transform: none !important; }
+.menu-open .site-header::before { opacity: 0 !important; }
 
 /* 20. MOVIMENTO REDUZIDO ================================================ */
 @media (prefers-reduced-motion: reduce) {
