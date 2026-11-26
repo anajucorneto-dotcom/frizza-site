@@ -1631,3 +1631,8 @@ table { border-collapse: collapse; }
 .product-card:hover .can-slot.is-cutout img { scale: 1.05; }
 .vitrine__visual:has(.is-cutout) .vitrine__can { width: 100%; }
 .vitrine__visual .img-slot.is-cutout { width: 100%; height: 100%; max-width: 640px; margin-inline: auto; }
+
+/* Ajustes: sem círculo atrás das latas na vitrine; lightbox centralizado */
+.vitrine__visual .vitrine__ring, .vitrine__visual:has(.is-cutout) .vitrine__ring { display: none; }
+.lightbox { margin: auto; inset: 0; }
+.lightbox__media .img-slot { width: 100%; }

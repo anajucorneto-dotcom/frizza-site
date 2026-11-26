@@ -19,7 +19,7 @@ Imagens finais geradas pelos designers, já **otimizadas e aplicadas** nas pági
 
 **Para trocar uma imagem:** salve o novo arquivo com o **mesmo nome e pasta** e rode `python3 ferramentas/gerar_paginas.py .` (o gerador lê as dimensões reais e atualiza `width`/`height`).
 
-## Em uso no site (75 arquivos)
+## Em uso no site (74 arquivos)
 
 | Arquivo | Onde aparece | Texto alternativo |
 |---|---|---|
@@ -70,7 +70,7 @@ Imagens finais geradas pelos designers, já **otimizadas e aplicadas** nas pági
 | `historia/vinhedo-bento-goncalves.webp` | sabor-uva-rose.html → Uva Rosé → faixa premium<br>historia.html → Nossa História → origem dos sabores (mapa) | Lata de FRIZZA Uva Rosé sobre um barril de madeira com vinhedos de Bento Gonçalves ao pôr do sol |
 | `sabores/uva-rose-premium.webp` | sabor-uva-rose.html → Uva Rosé → faixa premium | Lata de FRIZZA Uva Rosé em fundo escuro com luz dourada, pétalas e bolhas |
 | `sabores/ocasiao-uva-rose.webp` | sabor-uva-rose.html → Página do sabor → ocasião ideal<br>historia.html → Nossa História → linha do tempo 2024 | Pessoas aproveitando a FRIZZA Uva Rosé: para as ocasiões especiais (e as nem tanto) |
-| `onde-encontrar/festival-estande.webp` | historia.html → Nossa História → linha do tempo 2019 | Estande de madeira da FRIZZA lotado em um festival de música ao ar livre |
+| `onde-encontrar/festival-mulher.webp` | historia.html → Nossa História → linha do tempo 2019<br>onde-encontrar.html → Onde Encontrar → festivais e feiras | Mulher em um festival de música segurando uma lata FRIZZA, com o palco da FRIZZA ao fundo |
 | `historia/timeline-2020.webp` | historia.html → Nossa História → linha do tempo 2020 | Pessoa abrindo uma lata de FRIZZA Laranja Bahia ao lado do notebook |
 | `onde-encontrar/emporio-prateleira.webp` | historia.html → Nossa História → linha do tempo 2022<br>onde-encontrar.html → Onde Encontrar → hero | Prateleira de madeira de um empório cheia de latas FRIZZA dos cinco sabores |
 | `historia/timeline-2028.svg` | historia.html → Nossa História → linha do tempo 2028 | Ilustração: latas FRIZZA espalhadas pelo mapa do Brasil, com um coração no centro |
@@ -83,7 +83,6 @@ Imagens finais geradas pelos designers, já **otimizadas e aplicadas** nas pági
 | `historia/rio-para-aerea.webp` | historia.html → Nossa História → card pequenos produtores | Vista aérea de um rio amazônico com casas ribeirinhas entre a floresta ao amanhecer |
 | `historia/plantio-vista-alto.webp` | historia.html → Nossa História → card árvores | Vista do alto de uma plantação comunitária, com pessoas plantando mudas em canteiros |
 | `historia/reciclagem-festival.webp` | historia.html → Nossa História → card logística reversa<br>onde-encontrar.html → Onde Encontrar → festivais e feiras | Jovem sorridente depositando uma lata numa estação de reciclagem FRIZZA em um festival |
-| `onde-encontrar/festival-mulher.webp` | onde-encontrar.html → Onde Encontrar → festivais e feiras | Mulher em um festival de música segurando uma lata FRIZZA, com o palco da FRIZZA ao fundo |
 | `comunidade/polaroid-01.webp` | frizzalovers.html → #FRIZZALOVERS → hero (polaroids) |  |
 | `comunidade/polaroid-02.webp` | frizzalovers.html → #FRIZZALOVERS → hero (polaroids) |  |
 | `comunidade/polaroid-03.webp` | frizzalovers.html → #FRIZZALOVERS → hero (polaroids) |  |

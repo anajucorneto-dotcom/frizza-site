@@ -344,7 +344,7 @@ def head(title, desc, theme_color, serif=False):
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?{fonts}&display=swap">
-<link rel="stylesheet" href="assets/css/style.css?v=7">
+<link rel="stylesheet" href="assets/css/style.css?v=8">
 <script>
 /* Antes de pintar: define modo de animação, preloader (1ª visita) e cortina de transição */
 (function(){{var d=document.documentElement,rm=window.matchMedia('(prefers-reduced-motion: reduce)').matches;d.classList.add('js');if(!rm)d.classList.add('js-motion');try{{var pt=sessionStorage.getItem('frizza-pt');if(pt&&!rm){{d.classList.add('pt-enter');d.style.setProperty('--pt-color',pt);}}if(!sessionStorage.getItem('frizza-visited')&&!rm&&!pt)d.classList.add('has-preloader');}}catch(e){{}}setTimeout(function(){{if(!window.__frizzaReady)d.classList.remove('js-motion','pt-enter','has-preloader');}},4500);}})();
@@ -353,7 +353,7 @@ def head(title, desc, theme_color, serif=False):
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/split-type@0.3.4/umd/index.min.js"></script>
-<script defer src="assets/js/main.js?v=7"></script>
+<script defer src="assets/js/main.js?v=8"></script>
 </head>'''
 
 def preloader():
@@ -947,7 +947,7 @@ TIMELINE = [
     ('2018', 'Nasce em Gramado', 'Duas amigas, uma cozinha e dezenas de receitas testadas. O primeiro lote de Laranja Bahia esgota numa feira de rua da cidade, em uma tarde.', '#FF6B2B', '#B3410C',
      'historia/fundadoras-2018.webp', 'As duas amigas fundadoras da FRIZZA cortando laranjas na cozinha para o primeiro lote, em 2018', 'Barraca simples de feira de rua em Gramado com garrafas de vidro artesanais de refrigerante de laranja, plaquinha escrita à mão "FRIZZA", fundadores atendendo clientes sorridentes, arquitetura típica da Serra Gaúcha ao fundo, luz natural.'),
     ('2019', 'Das redes para os festivais', 'Os vídeos dos bastidores viralizam no Instagram e no TikTok. A FRIZZA vira presença confirmada em festivais de música e feiras orgânicas do Sul.', '#FFD23F', '#8A5A00',
-     'onde-encontrar/festival-estande.webp', 'Estande de madeira da FRIZZA lotado em um festival de música ao ar livre', 'Estande colorido da FRIZZA em festival de música ao ar livre, fila de jovens diversos, latas e garrafas coloridas num balde de gelo, bandeirolas, luz do fim de tarde.'),
+     'onde-encontrar/festival-mulher.webp', 'Mulher em um festival de música segurando uma lata FRIZZA, com o palco da FRIZZA ao fundo', 'Estande colorido da FRIZZA em festival de música ao ar livre, fila de jovens diversos, latas e garrafas coloridas num balde de gelo, bandeirolas, luz do fim de tarde.'),
     ('2020', 'Loja online para todo o Brasil', 'Com o e-commerce, a FRIZZA passa a chegar em qualquer CEP do país, em caixas que viram brinquedo (e casinha de gato).', '#2EC4B6', '#0B7268',
      'historia/timeline-2020.webp', 'Pessoa abrindo uma lata de FRIZZA Laranja Bahia ao lado do notebook', 'Mãos abrindo uma caixa de papelão kraft da FRIZZA em casa, com cinco latas coloridas dentro, papel semente e bilhete escrito à mão, mesa de madeira, luz natural.'),
     ('2022', 'Mais de 200 pontos de venda', 'Empórios, cafés, restaurantes e mercados do Sul e Sudeste abrem suas geladeiras para a FRIZZA.', '#7B2D8E', '#7B2D8E',
@@ -962,7 +962,7 @@ for i, (year, title, text, c, ink, file, alt, desc) in enumerate(TIMELINE):
     side = 'left' if i % 2 == 0 else 'right'
     tl_items += (f'<li class="timeline__item" style="--tl-c:{c};--tl-ink:{ink}"><span class="timeline__dot" aria-hidden="true"></span>'
                  f'<div class="timeline__card" data-reveal="{side}"><div><span class="timeline__year">{year}</span><h3>{title}</h3><p>{text}</p></div>'
-                 f'{slot(file, 1200, 900, alt, desc, "Nossa História → linha do tempo " + year, color=c, pos={"2024": "12% 50%", "2020": "50% 55%", "2018": "50% 55%"}.get(year, "50% 45%"))}</div></li>')
+                 f'{slot(file, 1200, 900, alt, desc, "Nossa História → linha do tempo " + year, color=c, pos={"2024": "12% 50%", "2020": "50% 55%", "2018": "50% 55%", "2019": "50% 30%"}.get(year, "50% 45%"))}</div></li>')
 
 VALUES = [('heart', 'Autenticidade', 'A gente é o que parece: sem pose, sem letra miúda.', '#FFD23F'),
           ('brasil', 'Brasilidade', 'Fruta, gente e jeito brasileiro em cada lata.', '#2EC4B6'),
