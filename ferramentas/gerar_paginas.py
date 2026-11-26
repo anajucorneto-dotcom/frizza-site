@@ -556,6 +556,9 @@ LOVERS = [  # (arquivo, largura, altura, usuário, legenda, alt, object-position
     ('comunidade/lovers-13.webp', 1122, 1402, 'leo.ipanema', 'Uva Rosé de canudinho em Ipanema 🏖️', 'Rapaz de óculos escuros bebendo FRIZZA Uva Rosé de canudinho na praia, com morros ao fundo', '50% 40%'),
     ('comunidade/lovers-14.webp', 1086, 1448, 'flor.boho', 'Look do dia combinando com a FRIZZA 🌿', 'Mulher de vestido longo segurando uma lata FRIZZA em frente a uma parede de bambu', '50% 35%'),
     ('comunidade/lovers-15.webp', 1060, 1484, 'bastidores.do.som', 'Bastidores do show, Uva Rosé na mão 🎤', 'Dois amigos rindo nos bastidores de um show, um deles erguendo uma lata de FRIZZA Uva Rosé', '50% 35%'),
+    ('comunidade/lovers-16.webp', 853, 1280, 'made.in.brazil', 'Pêssego com Gengibre pra fechar a noite 🍑', 'Mulher de boné verde escrito made in Brazil apoiando o rosto na mão, com uma lata de FRIZZA Pêssego com Gengibre na mesa', '50% 40%'),
+    ('comunidade/lovers-17.webp', 1116, 1410, 'cachos.no.show', 'Show bom é com FRIZZA na mão 🎶', 'Mulher de cabelo cacheado e jaqueta jeans segurando uma lata de FRIZZA Pêssego com Gengibre em frente ao palco de um show', '45% 35%'),
+    ('comunidade/lovers-18.webp', 1086, 1448, 'jantar.com.rose', 'Jantarzinho com Uva Rosé 🍇', 'Mulher de cabelo cacheado sorrindo num restaurante, com uma lata de FRIZZA Uva Rosé na mesa', '50% 40%'),
 ]
 feed = ''
 for k in [0, 3, 2, 1, 8, 10]:

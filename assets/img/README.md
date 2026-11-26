@@ -19,7 +19,7 @@ Imagens finais geradas pelos designers, já **otimizadas e aplicadas** nas pági
 
 **Para trocar uma imagem:** salve o novo arquivo com o **mesmo nome e pasta** e rode `python3 ferramentas/gerar_paginas.py .` (o gerador lê as dimensões reais e atualiza `width`/`height`).
 
-## Em uso no site (74 arquivos)
+## Em uso no site (77 arquivos)
 
 | Arquivo | Onde aparece | Texto alternativo |
 |---|---|---|
@@ -96,6 +96,9 @@ Imagens finais geradas pelos designers, já **otimizadas e aplicadas** nas pági
 | `comunidade/lovers-13.webp` | frizzalovers.html → #FRIZZALOVERS → galeria + lightbox | Foto de @leo.ipanema: Rapaz de óculos escuros bebendo FRIZZA Uva Rosé de canudinho na praia, com morros ao fundo |
 | `comunidade/lovers-14.webp` | frizzalovers.html → #FRIZZALOVERS → galeria + lightbox | Foto de @flor.boho: Mulher de vestido longo segurando uma lata FRIZZA em frente a uma parede de bambu |
 | `comunidade/lovers-15.webp` | frizzalovers.html → #FRIZZALOVERS → galeria + lightbox | Foto de @bastidores.do.som: Dois amigos rindo nos bastidores de um show, um deles erguendo uma lata de FRIZZA Uva Rosé |
+| `comunidade/lovers-16.webp` | frizzalovers.html → #FRIZZALOVERS → galeria + lightbox | Foto de @made.in.brazil: Mulher de boné verde escrito made in Brazil apoiando o rosto na mão, com uma lata de FRIZZA Pêssego com Gengibre na mesa |
+| `comunidade/lovers-17.webp` | frizzalovers.html → #FRIZZALOVERS → galeria + lightbox | Foto de @cachos.no.show: Mulher de cabelo cacheado e jaqueta jeans segurando uma lata de FRIZZA Pêssego com Gengibre em frente ao palco de um show |
+| `comunidade/lovers-18.webp` | frizzalovers.html → #FRIZZALOVERS → galeria + lightbox | Foto de @jantar.com.rose: Mulher de cabelo cacheado sorrindo num restaurante, com uma lata de FRIZZA Uva Rosé na mesa |
 | `comunidade/contato-hero.webp` | contato.html → Contato → hero | Duas amigas rindo ao ar livre, cada uma com uma lata FRIZZA na mão |
 
 ## Faltando (0)
