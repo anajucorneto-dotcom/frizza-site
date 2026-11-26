@@ -995,10 +995,31 @@ STORES = [
 ]
 UF_NAMES = {'PR': 'Paraná', 'SC': 'Santa Catarina', 'RS': 'Rio Grande do Sul', 'SP': 'São Paulo', 'RJ': 'Rio de Janeiro', 'MG': 'Minas Gerais'}
 colors = [f['color'] for f in FLAVORS]
-stores = ''.join(
-    f'<li class="store" data-uf="{uf}" data-search="{esc(city + " " + uf + " " + UF_NAMES[uf] + " " + name + " " + addr)}" style="--store-c:{colors[i % 5]}">'
-    f'<span class="store__type">{typ}</span><h3>{name}</h3><p class="store__city">{icon("pin")}{city} · {uf}</p><p>{addr}</p></li>'
-    for i, (city, uf, name, typ, addr) in enumerate(STORES))
+from urllib.parse import quote
+MAPS_OVERRIDE = {
+    'Loja Conceito FRIZZA': 'Avenida das Hortênsias, Gramado - RS',
+    'Casa do Vale dos Vinhedos': 'Vale dos Vinhedos, Bento Gonçalves - RS',
+    'Quiosque Leblon Natural': 'Praia do Leblon, Rio de Janeiro - RJ',
+}
+def maps_query(city, uf, name, addr):
+    # Endereços fictícios: o mapa aponta para o bairro real da cidade.
+    # Quando houver endereços reais, troque esta função (ou MAPS_OVERRIDE) pelo endereço completo.
+    if name in MAPS_OVERRIDE: return MAPS_OVERRIDE[name]
+    bairro = addr.split(' · ')[1] if ' · ' in addr else ''
+    return f'{bairro + ", " if bairro else ""}{city} - {uf}'
+def maps_link(q): return 'https://www.google.com/maps/search/?api=1&amp;query=' + quote(q + ', Brasil')
+DEFAULT_STORE = 'Loja Conceito FRIZZA'
+stores = ''
+for i, (city, uf, name, typ, addr) in enumerate(STORES):
+    q = maps_query(city, uf, name, addr)
+    act = name == DEFAULT_STORE
+    stores += (f'<li class="store{" is-active" if act else ""}" data-uf="{uf}" data-search="{esc(city + " " + uf + " " + UF_NAMES[uf] + " " + name + " " + addr)}" '
+               f'data-name="{esc(name)}" data-address="{esc(addr + " — " + city + " · " + uf)}" data-maps-q="{esc(q + ", Brasil")}" style="--store-c:{colors[i % 5]}">'
+               f'<button class="store__select" type="button" aria-pressed="{"true" if act else "false"}" aria-controls="stores-map" aria-label="Mostrar {esc(name)} no mapa"></button>'
+               f'<span class="store__type">{typ}</span><h3>{name}</h3><p class="store__city">{icon("pin")}{city} · {uf}</p><p>{addr}</p>'
+               f'<a class="store__maps" href="{maps_link(q)}" target="_blank" rel="noopener" aria-label="Abrir {esc(name)} no Google Maps (nova aba)">{icon("compass")}Abrir no Google Maps</a></li>')
+_d = [s_ for s_ in STORES if s_[2] == DEFAULT_STORE][0]
+DEFAULT_Q = maps_query(_d[0], _d[1], _d[2], _d[4]) + ', Brasil'
 chips = '<button class="filter-btn" type="button" data-uf="todos" aria-pressed="true">Todos</button>' + ''.join(
     f'<button class="filter-btn" type="button" data-uf="{uf}" aria-pressed="false" aria-label="{UF_NAMES[uf]}">{uf}</button>' for uf in UF_NAMES)
 EVENTS = [('festival-01.jpg', 'Janeiro', 'Festival Verão Orgânico', 'Florianópolis · SC', 'Praia, música ao vivo e estande FRIZZA com degustação gelada dos 5 sabores.',
@@ -1040,9 +1061,14 @@ onde = f'''
         <ul class="stores" role="list" data-stagger>{stores}</ul>
         <div class="stores-empty"><p><strong>Ainda não chegamos aí 😢</strong></p><p>Mas a loja online entrega em qualquer CEP do Brasil!</p><p style="margin-top:14px">{btn("Ir para a loja online", "#loja-online", "primary", ic="cart", ic_first=True, size="btn--sm")}</p></div>
       </div>
-      <figure class="stores-map" data-reveal>
-        <iframe title="Mapa: FRIZZA em Gramado, RS" src="https://www.google.com/maps?q=Gramado%2C%20RS&amp;z=12&amp;output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-        <figcaption>Mapa ilustrativo centralizado em Gramado (RS), onde fica a nossa loja conceito.</figcaption>
+      <figure class="stores-map" id="stores-map" data-reveal tabindex="-1">
+        <iframe title="Mapa do ponto de venda selecionado: {DEFAULT_STORE}" src="https://www.google.com/maps?q={quote(DEFAULT_Q)}&amp;z=15&amp;output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <figcaption>
+          <p class="stores-map__hint">Clique em um ponto de venda para ver no mapa</p>
+          <strong class="stores-map__name" aria-live="polite">{DEFAULT_STORE}</strong>
+          <span class="stores-map__address">{_d[4]} — {_d[0]} · {_d[1]}</span>
+          {btn("Abrir no Google Maps", maps_link(DEFAULT_Q.replace(", Brasil", "")), "primary", ic="compass", ic_first=True, size="btn--sm stores-map__link", attrs='target="_blank" rel="noopener"', magnetic=False)}
+        </figcaption>
       </figure>
     </div>
   </div>

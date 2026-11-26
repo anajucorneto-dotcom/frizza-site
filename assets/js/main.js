@@ -669,7 +669,7 @@
     const root = $('[data-store-finder]');
     if (!root) return;
     const input = $('#busca-cidade', root);
-    const chips = $$('[data-uf]', root);
+    const chips = $$('button[data-uf]', root);
     const stores = $$('.store');
     const status = $('#stores-status');
     const empty = $('.stores-empty');
@@ -699,6 +699,42 @@
       chips.forEach((x) => x.setAttribute('aria-pressed', String(x === c)));
       run();
     }));
+  }
+
+  /* Mapa do ponto de venda: clique no cartão mostra a localização ao lado */
+  function initStoreMap() {
+    const fig = $('#stores-map');
+    if (!fig) return;
+    const iframe = $('iframe', fig);
+    const nameEl = $('.stores-map__name', fig);
+    const addrEl = $('.stores-map__address', fig);
+    const link = $('.stores-map__link', fig);
+    const stores = $$('.store[data-maps-q]');
+    const select = (store, scroll) => {
+      const q = encodeURIComponent(store.dataset.mapsQ);
+      stores.forEach((s) => {
+        s.classList.toggle('is-active', s === store);
+        const b = $('.store__select', s);
+        if (b) b.setAttribute('aria-pressed', String(s === store));
+      });
+      fig.classList.add('is-loading');
+      iframe.onload = () => fig.classList.remove('is-loading');
+      setTimeout(() => fig.classList.remove('is-loading'), 2500);
+      iframe.src = `https://www.google.com/maps?q=${q}&z=15&output=embed`;
+      iframe.title = 'Mapa do ponto de venda selecionado: ' + store.dataset.name;
+      nameEl.textContent = store.dataset.name;
+      addrEl.textContent = store.dataset.address;
+      link.href = 'https://www.google.com/maps/search/?api=1&query=' + q;
+      link.setAttribute('aria-label', `Abrir ${store.dataset.name} no Google Maps (nova aba)`);
+      if (motion) gsap.fromTo(fig, { scale: 0.98 }, { scale: 1, duration: 0.5, ease: 'back.out(2)', clearProps: 'transform' });
+      // no celular o mapa fica abaixo da lista: leva a pessoa até ele
+      if (scroll && window.matchMedia('(max-width: 999px)').matches) {
+        const y = fig.getBoundingClientRect().top + window.scrollY - 90;
+        if (lenis) lenis.scrollTo(y, { force: true });
+        else window.scrollTo({ top: y, behavior: reduce ? 'auto' : 'smooth' });
+      }
+    };
+    stores.forEach((store) => $('.store__select', store).addEventListener('click', () => select(store, true)));
   }
 
   /* ---------------------------------------------------------------------
@@ -909,6 +945,7 @@
   safe('demo', initDemoLinks);
   safe('filtros', initFilters);
   safe('lojas', initStores);
+  safe('mapa das lojas', initStoreMap);
   safe('lightbox', initLightbox);
   safe('faq', initFaq);
   safe('formulários', initForms);

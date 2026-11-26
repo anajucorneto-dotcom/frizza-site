@@ -94,6 +94,10 @@ Animações usam apenas `transform` e `opacity` sempre que possível, para mante
 ### Links ilustrativos
 Como a marca é fictícia, links de redes sociais, WhatsApp, e-mail, telefone e loja online têm o atributo `data-demo`: ao clicar, aparece um aviso ("link ilustrativo…") em vez de abrir um perfil que não existe. Para transformar em link real, basta apagar o `data-demo` do elemento.
 
+### Pontos de venda e Google Maps
+Em **Onde Encontrar**, clicar em um ponto de venda mostra a localização no mapa ao lado (no celular, a página rola até o mapa) e atualiza o botão **"Abrir no Google Maps"**. Cada cartão também tem o próprio link para o Google Maps (abre em nova aba).
+Como os endereços são fictícios, o mapa aponta para o **bairro real** de cada cidade (ex.: "Savassi, Belo Horizonte - MG"). Para usar endereços reais, troque o atributo `data-maps-q` e o link `store__maps` de cada cartão em `onde-encontrar.html` (ou a função `maps_query` em `ferramentas/gerar_paginas.py`).
+
 ---
 
 ## 6. Publicar no GitHub Pages

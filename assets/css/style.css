@@ -1342,3 +1342,22 @@ table { border-collapse: collapse; }
 .site-header .logo-slot img { height: 62px; }
 @media (max-width: 600px) { .site-header .logo-slot img { height: 52px; } }
 .premium-title .accent { color: var(--uva-rose); }
+
+/* ===== Pontos de venda ligados ao mapa ===== */
+.store { position: relative; cursor: pointer; transition: translate .35s var(--ease-out), box-shadow .35s, outline-color .3s, background-color .3s; outline: 3px solid transparent; outline-offset: -3px; }
+.store__select { position: absolute; inset: 0; z-index: 1; border-radius: inherit; cursor: pointer; }
+.store__select:focus-visible { outline: 3px solid var(--preto-suave); outline-offset: 2px; box-shadow: 0 0 0 6px var(--amarelo-solar); }
+.store.is-active { outline-color: var(--store-c); background: color-mix(in srgb, var(--store-c) 10%, #fff); box-shadow: var(--shadow); }
+.store__maps {
+  position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 6px; margin-top: 12px;
+  font-weight: 700; font-size: .9rem; color: var(--laranja-ink); text-decoration: underline; text-underline-offset: 3px;
+}
+.store__maps .icon { width: 18px; height: 18px; }
+.store__maps:hover { color: var(--preto-suave); }
+.stores-map figcaption { display: grid; gap: 4px; padding: 18px 20px; }
+.stores-map__hint { font-size: .85rem; color: var(--cinza-500); }
+.stores-map__name { font-family: var(--font-display); font-size: 1.35rem; color: var(--preto-suave); }
+.stores-map__address { font-size: .95rem; color: var(--cinza-700); margin-bottom: 10px; }
+.stores-map__link { justify-self: start; }
+.stores-map iframe { transition: opacity .35s; }
+.stores-map.is-loading iframe { opacity: .35; }
