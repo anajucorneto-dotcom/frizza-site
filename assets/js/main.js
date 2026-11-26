@@ -129,7 +129,7 @@
         const a = e.target.closest('a[href]');
         if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         if ((a.target && a.target !== '_self') || a.hasAttribute('download') || a.dataset.demo !== undefined) return;
-        const url = new URL(a.href, location.href);
+        const url = new URL(a.getAttribute('href'), location.href);
         if (url.protocol !== location.protocol || url.host !== location.host) return;
         if (!/\.html$|\/$/.test(url.pathname)) return;
         if (url.pathname === location.pathname && url.hash) return; // âncora na mesma página
@@ -433,9 +433,9 @@
     });
 
     // divisórias em onda "respiram" com o scroll
-    $$('.wave').forEach((w) => {
-      gsap.fromTo(w, { scaleY: w.classList.contains('wave--top') ? -0.4 : 0.4 }, {
-        scaleY: w.classList.contains('wave--top') ? -1 : 1, ease: 'none',
+    $$('.wave--bottom').forEach((w) => {
+      gsap.fromTo(w, { scaleY: 0.4 }, {
+        scaleY: 1, ease: 'none',
         scrollTrigger: { trigger: w, start: 'top bottom', end: 'top 60%', scrub: true }
       });
     });
