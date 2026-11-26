@@ -286,7 +286,7 @@ def head(title, desc, theme_color, serif=False):
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?{fonts}&display=swap">
-<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/style.css?v=4">
 <script>
 /* Antes de pintar: define modo de animação, preloader (1ª visita) e cortina de transição */
 (function(){{var d=document.documentElement,rm=window.matchMedia('(prefers-reduced-motion: reduce)').matches;d.classList.add('js');if(!rm)d.classList.add('js-motion');try{{var pt=sessionStorage.getItem('frizza-pt');if(pt&&!rm){{d.classList.add('pt-enter');d.style.setProperty('--pt-color',pt);}}if(!sessionStorage.getItem('frizza-visited')&&!rm&&!pt)d.classList.add('has-preloader');}}catch(e){{}}setTimeout(function(){{if(!window.__frizzaReady)d.classList.remove('js-motion','pt-enter','has-preloader');}},4500);}})();
@@ -295,7 +295,7 @@ def head(title, desc, theme_color, serif=False):
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/split-type@0.3.4/umd/index.min.js"></script>
-<script defer src="assets/js/main.js"></script>
+<script defer src="assets/js/main.js?v=4"></script>
 </head>'''
 
 def preloader():
@@ -662,7 +662,7 @@ quiz_html = f'''<div class="quiz" data-quiz data-reveal>
     <p class="eyebrow">Seu match</p>
     <h3 class="quiz__result-title">Os sabores com a sua cara</h3>
     <div class="quiz__results" data-quiz-results></div>
-    <div class="btn-row quiz__actions"><button class="btn btn--primary" type="button" data-quiz-add-all>{icon("cart")}<span data-quiz-add-label>Adicionar os favoritos ao carrinho</span><span class="btn__bubbles" aria-hidden="true"><i></i><i></i><i></i></span></button>
+    <div class="btn-row quiz__actions"><button class="btn btn--primary" type="button" data-quiz-add-all><span data-quiz-add-label>Adicionar os favoritos ao carrinho</span>{icon("cart")}<span class="btn__bubbles" aria-hidden="true"><i></i><i></i><i></i></span></button>
       <button class="btn btn--ghost" type="button" data-quiz-restart><span>Refazer o quiz</span></button></div>
   </div>
   {quiz_products}
