@@ -1174,7 +1174,7 @@
       if (!top.length) top = rank.slice(0, 2);
       const title = $('.quiz__result-title', q);
       if (title) title.textContent = top.length === 1 ? 'O sabor com a sua cara' : 'Os sabores com a sua cara';
-      const addAll = $('[data-quiz-add-all] span', q);
+      const addAll = $('[data-quiz-add-label]', q);
       if (addAll) addAll.textContent = top.length === 1 ? 'Adicionar ao carrinho' : 'Adicionar os favoritos ao carrinho';
       results.replaceChildren();
       top.forEach((r, idx) => {

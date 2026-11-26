@@ -662,7 +662,7 @@ quiz_html = f'''<div class="quiz" data-quiz data-reveal>
     <p class="eyebrow">Seu match</p>
     <h3 class="quiz__result-title">Os sabores com a sua cara</h3>
     <div class="quiz__results" data-quiz-results></div>
-    <div class="btn-row quiz__actions"><button class="btn btn--primary" type="button" data-quiz-add-all>{icon("cart")}<span>Adicionar os favoritos ao carrinho</span><span class="btn__bubbles" aria-hidden="true"><i></i><i></i><i></i></span></button>
+    <div class="btn-row quiz__actions"><button class="btn btn--primary" type="button" data-quiz-add-all>{icon("cart")}<span data-quiz-add-label>Adicionar os favoritos ao carrinho</span><span class="btn__bubbles" aria-hidden="true"><i></i><i></i><i></i></span></button>
       <button class="btn btn--ghost" type="button" data-quiz-restart><span>Refazer o quiz</span></button></div>
   </div>
   {quiz_products}
