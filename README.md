@@ -24,7 +24,7 @@ Depois acesse <http://localhost:8000>. No VS Code, a extensão *Live Server* faz
 
 ```
 /index.html                  Home (vitrine)
-/sabores.html                Nossos Sabores (grid + filtro + guia rápido)
+/sabores.html                Nossos Sabores (loja: cards com "Adicionar", filtro e quiz)
 /sabor-laranja-bahia.html    ┐
 /sabor-acai-guarana.html     │ Páginas individuais dos sabores
 /sabor-limao-hortela.html    │ (mesmo template; a Uva Rosé tem
@@ -34,6 +34,7 @@ Depois acesse <http://localhost:8000>. No VS Code, a extensão *Live Server* faz
 /onde-encontrar.html         Onde Encontrar (busca de lojas, mapa, loja online, festivais)
 /frizzalovers.html           #FRIZZALOVERS (galeria masonry + lightbox)
 /contato.html                Contato (formulário, WhatsApp, FAQ, imprensa)
+/checkout.html               Finalizar compra (dados → entrega → pagamento → confirmação, simulação)
 /assets/css/style.css        Todos os estilos (variáveis da marca no topo)
 /assets/js/main.js           Todas as interações e animações
 /assets/icons/               Ícones SVG line art (traço médio, cantos arredondados)
@@ -90,6 +91,15 @@ Preloader com bolhas (1ª visita da sessão) · cortina em onda colorida entre p
 Animações usam apenas `transform` e `opacity` sempre que possível, para manter 60 fps.
 
 **Bibliotecas (CDN, carregadas com `defer`):** GSAP 3.12.5 + ScrollTrigger, Lenis 1.1.13, SplitType 0.3.4. Fontes do Google Fonts.
+
+### Loja online (simulação)
+- **Carrinho** no canto superior direito de todas as páginas, com contador. Abre uma gaveta lateral com os produtos, botões de quantidade (+/−), remover, subtotal e aviso de frete grátis (acima de R$ 150 no Sul e Sudeste).
+- **Adicionar ao carrinho** aparece junto dos produtos: cards da página Nossos Sabores, vitrine e banner da Uva Rosé na Home, topo e rodapé de cada página de sabor e resultado do quiz.
+- O carrinho fica salvo **no navegador** (localStorage) e acompanha a pessoa pelas páginas.
+- **Quiz "Qual FRIZZA combina com você?"** (página Nossos Sabores): 4 perguntas, uma por vez, com barra de progresso e botão voltar. No final, mostra os sabores com a % de combinação e um botão para adicionar todos ao carrinho.
+- **`checkout.html`**: 3 etapas (dados, entrega e pagamento) com validação amigável e máscaras (celular, CPF, CEP, cartão). Calcula frete (padrão, expressa ou retirada em Gramado), dá 5% de desconto no Pix, parcela em até 3x no cartão e termina na tela "Pedido confirmado".
+- Preços (fictícios) por lata de 350 ml: Laranja Bahia e Limão com Hortelã R$ 9,90 · Açaí com Guaraná e Pêssego com Gengibre R$ 10,90 · Uva Rosé R$ 13,90. Ficam em `PRICES`, no topo de `ferramentas/gerar_paginas.py`.
+- ⚠️ **É uma simulação acadêmica:** nenhum pagamento é processado e nenhum dado sai do navegador. A própria página avisa para não usar dados reais de cartão.
 
 ### Links ilustrativos
 Como a marca é fictícia, links de redes sociais, WhatsApp, e-mail, telefone e loja online têm o atributo `data-demo`: ao clicar, aparece um aviso ("link ilustrativo…") em vez de abrir um perfil que não existe. Para transformar em link real, basta apagar o `data-demo` do elemento.

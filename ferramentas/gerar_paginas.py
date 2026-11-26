@@ -226,6 +226,17 @@ FLAVORS = [
          nutri=dict(kcal=104, carb=26, sug=24, add=12, prot=0, fat=0, fib=0, sod=9), highlight=('0%', 'álcool, 100% celebração')),
 ]
 FMAP = {f['slug']: f for f in FLAVORS}
+PRICES = {'laranja-bahia': 9.9, 'acai-guarana': 10.9, 'limao-hortela': 9.9, 'pessego-gengibre': 10.9, 'uva-rose': 13.9}
+for _f in FLAVORS: _f['price'] = PRICES[_f['slug']]
+def brl(v): return 'R$ ' + f'{v:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.')
+def cart_attrs(f):
+    return (f'data-add-cart data-id="{f["slug"]}" data-name="FRIZZA {esc(f["name"])}" data-price="{f["price"]:.2f}" '
+            f'data-color="{f["color"]}" data-img="assets/img/lata-{f["slug"]}.png" data-url="sabor-{f["slug"]}.html"')
+def cart_btn(f, variant='primary', size='', label='Adicionar ao carrinho', magnetic=True):
+    mg = ' data-magnetic' if magnetic else ''
+    return (f'<button class="btn btn--{variant} {size}" type="button" {cart_attrs(f)}{mg} aria-label="Adicionar FRIZZA {esc(f["name"])} ao carrinho, {brl(f["price"])}">'
+            f'{icon("cart")}<span data-cart-label>{label}</span><span class="btn__bubbles" aria-hidden="true"><i></i><i></i><i></i></span></button>')
+
 
 # ---------------------------------------------------------------- partes comuns
 NAV = [('index.html', 'Home'), ('sabores.html', 'Nossos Sabores'), ('historia.html', 'Nossa História'),
@@ -306,6 +317,24 @@ def page_transition():
             f'<div class="page-transition__wave page-transition__wave--bottom">{wave_svg}</div>'
             f'<div class="page-transition__bubbles">{bub}</div></div>')
 
+def cart_drawer():
+    return f'''<div class="cart-drawer" id="cart-drawer" aria-hidden="true">
+  <div class="cart-drawer__overlay" data-close-cart></div>
+  <aside class="cart-drawer__panel" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+    <header class="cart-drawer__head"><h2 id="cart-title">Seu carrinho</h2>
+      <button class="cart-drawer__close" type="button" data-close-cart aria-label="Fechar carrinho">{icon("close")}</button></header>
+    <ul class="cart-items" role="list" data-cart-items></ul>
+    <div class="cart-empty" data-cart-empty>{icon("cart")}<p><strong>Seu carrinho está vazio.</strong></p><p>Que tal começar pelo carro-chefe, a Laranja Bahia?</p>
+      <a class="btn btn--primary btn--sm" href="sabores.html"><span>Ver sabores</span></a></div>
+    <footer class="cart-drawer__foot" data-cart-foot>
+      <p class="cart-drawer__ship" data-cart-ship></p>
+      <p class="cart-drawer__total"><span>Subtotal</span><strong data-cart-subtotal>R$ 0,00</strong></p>
+      <a class="btn btn--primary cart-drawer__checkout" href="checkout.html"><span>Finalizar compra</span>{icon("arrow", "icon--arrow")}<span class="btn__bubbles" aria-hidden="true"><i></i><i></i><i></i></span></a>
+      <button class="cart-drawer__continue" type="button" data-close-cart>Continuar comprando</button>
+    </footer>
+  </aside>
+</div>'''
+
 def header(active):
     links = ''
     mlinks = ''
@@ -319,9 +348,11 @@ def header(active):
     <a class="logo" href="index.html" aria-label="FRIZZA, ir para a página inicial">{logo_slot("logo-frizza.png", "logo-slot--color")}{logo_slot("logo-frizza-branco.png", "logo-slot--white")}</a>
     <nav class="nav" aria-label="Menu principal"><ul class="nav-list" role="list">{links}</ul></nav>
     {btn(icon("pin") + "Onde Comprar", "onde-encontrar.html", "yellow", size="btn--sm header-cta")}
+    <button class="cart-toggle" type="button" aria-controls="cart-drawer" aria-expanded="false" aria-label="Abrir carrinho, 0 itens" data-open-cart>{icon("cart")}<span class="cart-count" data-cart-count aria-hidden="true">0</span></button>
     <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Abrir menu"><span></span><span></span></button>
   </div>
 </header>
+{cart_drawer()}
 <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
   <div class="mobile-menu__inner">
     <span class="mobile-menu__blob mobile-menu__blob--1" aria-hidden="true"></span>
@@ -365,7 +396,7 @@ def footer():
         <li><a href="frizzalovers.html">#FRIZZALOVERS</a></li><li><a href="contato.html#imprensa">Imprensa</a></li></ul></nav>
       <nav class="footer-col" aria-labelledby="f-sab"><h3 id="f-sab">Sabores</h3><ul role="list">{flav}</ul></nav>
       <nav class="footer-col" aria-labelledby="f-aj"><h3 id="f-aj">Ajuda</h3><ul role="list">
-        <li><a href="onde-encontrar.html">Onde comprar</a></li><li><a href="onde-encontrar.html#loja-online">Loja online</a></li>
+        <li><a href="onde-encontrar.html">Onde comprar</a></li><li><a href="sabores.html">Comprar online</a></li><li><a href="checkout.html">Finalizar compra</a></li>
         <li><a href="contato.html#faq">Perguntas frequentes</a></li><li><a href="contato.html#faq">Devolução de garrafas</a></li></ul></nav>
       <div class="footer-col"><h3>Contato</h3><ul role="list">
         <li><a href="https://wa.me/5554999990000" data-demo="{DEMO_CONTACT}">WhatsApp (54) 99999-0000</a></li>
@@ -403,7 +434,8 @@ def product_card(f, section):
     <div class="product-card__visual">{can(f, section)}</div>
     <h3><a href="sabor-{f["slug"]}.html" data-cursor="ver">FRIZZA {f["name"]}</a></h3>
     <p class="product-card__slogan">“{f["slogan"]}”</p>
-    <span class="btn btn--dark btn--sm" aria-hidden="true"><span>Saiba mais</span>{icon("arrow", "icon--arrow")}</span>
+    <p class="product-card__price"><strong>{brl(f["price"])}</strong> <span>lata 350 ml</span></p>
+    {cart_btn(f, "dark", "btn--sm", "Adicionar", magnetic=False)}
   </div>
 </li>'''
 
@@ -442,7 +474,8 @@ for f in FLAVORS:
     <p class="slogan">“{f["slogan"]}”</p>
     <p>{f["desc"].split(". ")[0]}.</p>
     <ul class="vitrine__tags" role="list">{tags}</ul>
-    <div class="btn-row">{btn("Saiba mais", f"sabor-{f['slug']}.html", "white", ic="arrow", attrs=f'aria-label="Saiba mais sobre FRIZZA {esc(f["name"])}"')}</div>
+    <p class="vitrine__price"><strong>{brl(f["price"])}</strong> · lata 350 ml</p>
+    <div class="btn-row">{cart_btn(f, "dark")}{btn("Saiba mais", f"sabor-{f['slug']}.html", "white", ic="arrow", attrs=f'aria-label="Saiba mais sobre FRIZZA {esc(f["name"])}"')}</div>
   </div>
 </article>'''
 
@@ -516,12 +549,24 @@ home = f'''
       <p class="eyebrow">Edição Limitada · Serra Gaúcha</p>
       <h2 class="premium-title" id="rose-title" data-reveal>Para brindar <span class="accent">sem precisar de motivo</span></h2>
       <p class="premium-text" data-reveal>A nova FRIZZA Uva Rosé nasce da parceria com vinícolas de Bento Gonçalves: uva rosé orgânica, um sopro de água de rosas e bolhas finas e persistentes, estilo espumante. Sem álcool, cheia de celebração.</p>
-      <div class="btn-row" style="margin-top:34px" data-reveal>{btn("Descobrir a Uva Rosé", "sabor-uva-rose.html", "yellow", ic="arrow")}{btn("Onde comprar", "onde-encontrar.html", "ghost", ic="pin", ic_first=True)}</div>
+      <div class="btn-row" style="margin-top:34px" data-reveal>{btn("Descobrir a Uva Rosé", "sabor-uva-rose.html", "yellow", ic="arrow")}{cart_btn(uva, "white")}</div>
     </div>
     <div class="rose-banner__visual">
       <span class="rose-banner__halo" aria-hidden="true"></span>
       <div class="float" data-parallax="0.15">{can(uva, "Banner especial Uva Rosé")}</div>
       {seal("rose-home", "EDIÇÃO LIMITADA • SERRA GAÚCHA • SAFRA 2026 •", "Rosé", "Safra 2026", "#FFD23F", "#1A1A2E", "Selo Edição Limitada, Serra Gaúcha", 34)}
+    </div>
+  </div>
+</section>
+
+<section class="section section--pastel" data-theme="roxo" aria-labelledby="lovers-title">
+  <div class="container">
+    <div class="section-head center"><p class="eyebrow">Comunidade</p><h2 id="lovers-title" data-split="words">#FRIZZALOVERS</h2>
+      <p>Gente de verdade, momentos de verdade. Olha quem já está borbulhando com a gente.</p></div>
+    <ul class="feed" role="list" data-stagger>{feed}</ul>
+    <div class="lovers-cta" data-reveal>
+      <p>Poste sua FRIZZA com <strong>#FRIZZALOVERS</strong> e apareça aqui 📸</p>
+      {btn("Seguir @frizzaoficial", "https://www.instagram.com/frizzaoficial/", "primary", ic="instagram", ic_first=True, attrs=f'data-demo="{DEMO_SOCIAL}" target="_blank" rel="noopener"')}
     </div>
   </div>
 </section>
@@ -539,20 +584,6 @@ home = f'''
   </div>
 </section>
 
-<section class="section section--dark on-dark overflow-clip" aria-labelledby="numbers-title">
-  {bubbles_canvas(26, color="255, 210, 63")}
-  <div class="container" style="position:relative;z-index:1">
-    <div class="section-head"><p class="eyebrow">FRIZZA em números</p><h2 id="numbers-title" data-split="words">Cada gole faz diferença</h2></div>
-    <ul class="stats" role="list" data-stagger>
-      {stat("bottle", 2, "milhões de garrafas vendidas", "+", "", "Mais de 2")}
-      {stat("hands", 23, "famílias de agricultores parceiros")}
-      {stat("tree", 5000, "árvores plantadas", "+", "", "Mais de 5.000")}
-      {stat("recycle", 180000, "embalagens de vidro retornadas", "+", "", "Mais de 180.000")}
-    </ul>
-  </div>
-  {wave("#FAFAFA")}
-</section>
-
 <section class="section story-preview" aria-labelledby="story-title">
   <div class="container grid-2">
     <div class="story-preview__media">
@@ -568,18 +599,6 @@ home = f'''
     </div>
   </div>
 </section>
-
-<section class="section section--pastel" data-theme="roxo" aria-labelledby="lovers-title">
-  <div class="container">
-    <div class="section-head center"><p class="eyebrow">Comunidade</p><h2 id="lovers-title" data-split="words">#FRIZZALOVERS</h2>
-      <p>Gente de verdade, momentos de verdade. Olha quem já está borbulhando com a gente.</p></div>
-    <ul class="feed" role="list" data-stagger>{feed}</ul>
-    <div class="lovers-cta" data-reveal>
-      <p>Poste sua FRIZZA com <strong>#FRIZZALOVERS</strong> e apareça aqui 📸</p>
-      {btn("Seguir @frizzaoficial", "https://www.instagram.com/frizzaoficial/", "primary", ic="instagram", ic_first=True, attrs=f'data-demo="{DEMO_SOCIAL}" target="_blank" rel="noopener"')}
-    </div>
-  </div>
-</section>
 '''
 page('index.html', 'FRIZZA Refrigerantes | Seu paladar merece esse upgrade',
      'Refrigerantes artesanais com frutas brasileiras de verdade, menos açúcar e ingredientes naturais. Conheça os 5 sabores FRIZZA, feitos em Gramado (RS).',
@@ -589,10 +608,66 @@ page('index.html', 'FRIZZA Refrigerantes | Seu paladar merece esse upgrade',
 set_page('sabores.html')
 cards = ''.join(product_card(f, 'Grid de cards') for f in FLAVORS)
 row = ''.join(f'<div class="float float--{(i%3)+1}" data-reveal="fade">{can(f, "Hero (as 5 latas)", label=True)}</div>' for i, f in enumerate(FLAVORS))
-guide_rows = ''
-for f in FLAVORS:
-    carb = {3: 'Média', 2: 'Suave', 5: 'Alta', 4: 'Fina, estilo espumante'}[f['sensory'][2][4]]
-    guide_rows += f'<tr><th scope="row"><a href="sabor-{f["slug"]}.html">{f["name"]}</a></th><td>{f["cat_label"]}</td><td>{carb}</td><td>{f["nutri"]["kcal"]} kcal</td><td>{f["occasion"][0]}</td></tr>'
+
+QUIZ = [
+    ('Pra que momento é a sua FRIZZA?', 'sun', [
+        ('Dia a dia, com a família', {'laranja-bahia': 3, 'limao-hortela': 1}),
+        ('Energia pro rolê ou pros estudos', {'acai-guarana': 3}),
+        ('Acompanhar comida ou fazer drinks', {'limao-hortela': 3, 'pessego-gengibre': 1}),
+        ('Comemorar alguma coisa', {'uva-rose': 3, 'pessego-gengibre': 1}),
+        ('Experimentar algo diferente', {'pessego-gengibre': 3, 'uva-rose': 1}),
+    ]),
+    ('Que tipo de sabor te conquista?', 'taste', [
+        ('Cítrico e refrescante', {'laranja-bahia': 2, 'limao-hortela': 3}),
+        ('Frutado e encorpado', {'acai-guarana': 3, 'uva-rose': 1}),
+        ('Doce com um toque picante', {'pessego-gengibre': 3}),
+        ('Floral e delicado', {'uva-rose': 3}),
+        ('Doce e clássico', {'laranja-bahia': 3}),
+    ]),
+    ('Quanto gás você curte?', 'bubbles', [
+        ('Suave, quase nada', {'acai-guarana': 2}),
+        ('Na medida certa', {'laranja-bahia': 2, 'pessego-gengibre': 2}),
+        ('Bastante, que estala!', {'limao-hortela': 3}),
+        ('Fininho, estilo espumante', {'uva-rose': 3}),
+    ]),
+    ('E as calorias?', 'drop', [
+        ('Quero o mais leve possível', {'limao-hortela': 3}),
+        ('Equilibrado está ótimo', {'laranja-bahia': 1, 'pessego-gengibre': 1, 'acai-guarana': 1}),
+        ('Hoje é dia de festa, tanto faz', {'uva-rose': 2, 'acai-guarana': 1}),
+    ]),
+]
+import json as _json
+quiz_steps = ''
+for qi, (q, ic, opts) in enumerate(QUIZ):
+    options = ''.join(
+        f'<li><button class="quiz__opt" type="button" data-score="{esc(_json.dumps(sc))}" aria-pressed="false">{o}</button></li>' for o, sc in opts)
+    quiz_steps += (f'<fieldset class="quiz__step{" is-current" if qi == 0 else ""}" data-step="{qi}"{"" if qi == 0 else " hidden"}>'
+                   f'<legend class="quiz__q">{icon(ic)}<span>{q}</span></legend><ul class="quiz__opts" role="list">{options}</ul></fieldset>')
+quiz_products = ''.join(
+    f'<template data-quiz-product="{f["slug"]}"><article class="quiz-result" data-theme="{f["slug"]}">'
+    f'<div class="quiz-result__can">{can(f, "Quiz (resultado)", label=False)}</div>'
+    f'<div class="quiz-result__info"><p class="quiz-result__match"><span data-match></span> de combinação</p>'
+    f'<h4>FRIZZA {f["name"]}</h4><p class="quiz-result__slogan">“{f["slogan"]}”</p><p class="quiz-result__why">{f["card"]}</p>'
+    f'<p class="product-card__price"><strong>{brl(f["price"])}</strong> <span>lata 350 ml</span></p>'
+    f'<div class="btn-row">{cart_btn(f, "dark", "btn--sm", "Adicionar", magnetic=False)}<a class="link-arrow" href="sabor-{f["slug"]}.html">Conhecer {icon("arrow")}</a></div></div></article></template>'
+    for f in FLAVORS)
+quiz_html = f'''<div class="quiz" data-quiz data-reveal>
+  <div class="quiz__top">
+    <button class="quiz__back" type="button" data-quiz-back hidden>{icon("arrow")}<span>Voltar</span></button>
+    <p class="quiz__progress-label" aria-live="polite"><span data-quiz-count>Pergunta 1 de {len(QUIZ)}</span></p>
+  </div>
+  <div class="quiz__bar" aria-hidden="true"><i style="--p:{1/len(QUIZ):.3f}"></i></div>
+  <form class="quiz__form" onsubmit="return false">{quiz_steps}</form>
+  <div class="quiz__result" data-quiz-result hidden tabindex="-1">
+    <p class="eyebrow">Seu match</p>
+    <h3 class="quiz__result-title">Os sabores com a sua cara</h3>
+    <div class="quiz__results" data-quiz-results></div>
+    <div class="btn-row quiz__actions"><button class="btn btn--primary" type="button" data-quiz-add-all>{icon("cart")}<span>Adicionar os favoritos ao carrinho</span><span class="btn__bubbles" aria-hidden="true"><i></i><i></i><i></i></span></button>
+      <button class="btn btn--ghost" type="button" data-quiz-restart><span>Refazer o quiz</span></button></div>
+  </div>
+  {quiz_products}
+  <noscript><p>O quiz precisa de JavaScript. Veja todos os sabores na lista acima.</p></noscript>
+</div>'''
 sabores = f'''
 <section class="page-hero center" data-theme="solar" aria-labelledby="sab-title">
   {bubbles_canvas(30)}
@@ -620,17 +695,11 @@ sabores = f'''
   </div>
 </section>
 
-<section class="section section--pastel" data-theme="menta" aria-labelledby="guide-title">
-  <div class="container">
-    <div class="section-head"><p class="eyebrow">Guia rápido</p><h2 id="guide-title" data-split="words">Qual FRIZZA combina com você?</h2>
-      <p>Compare os sabores num olhar só: categoria, gás, calorias por lata e a ocasião ideal.</p></div>
-    <div class="nutri-wrap" data-reveal>
-      <table class="nutri">
-        <caption class="sr-only">Comparativo dos sabores FRIZZA</caption>
-        <thead><tr><th scope="col">Sabor</th><th scope="col">Categoria</th><th scope="col">Gás</th><th scope="col">Calorias (lata 350 ml)</th><th scope="col">Combina com</th></tr></thead>
-        <tbody>{guide_rows}</tbody>
-      </table>
-    </div>
+<section class="section section--pastel" data-theme="menta" id="quiz" aria-labelledby="guide-title">
+  <div class="container container--narrow">
+    <div class="section-head center"><p class="eyebrow">Quiz</p><h2 id="guide-title" data-split="words">Qual FRIZZA combina com você?</h2>
+      <p>Responda 4 perguntinhas rápidas e a gente indica os sabores com a sua cara.</p></div>
+    {quiz_html}
   </div>
 </section>
 
@@ -639,8 +708,8 @@ sabores = f'''
     <div class="buy-band" data-theme="laranja-bahia" data-reveal>
       <span class="blob" aria-hidden="true"></span>
       <div style="position:relative"><p class="eyebrow" style="color:var(--amarelo-solar)">Bateu vontade?</p><h2 id="buy-title">Tem FRIZZA pertinho de você</h2>
-        <p style="margin-top:12px;max-width:520px">Mais de 200 pontos de venda no Sul e Sudeste e entrega para todo o Brasil pela loja online.</p></div>
-      <div class="btn-row" style="position:relative">{btn("Onde comprar", "onde-encontrar.html", "primary", ic="pin", ic_first=True)}{btn("Loja online", "onde-encontrar.html#loja-online", "yellow", ic="cart", ic_first=True)}</div>
+        <p style="margin-top:12px;max-width:520px">Compre aqui mesmo, com entrega para todo o Brasil, ou encontre um dos mais de 200 pontos de venda no Sul e Sudeste.</p></div>
+      <div class="btn-row" style="position:relative"><button class="btn btn--yellow" type="button" data-open-cart data-magnetic>{icon("cart")}<span>Ver carrinho</span><span class="btn__bubbles" aria-hidden="true"><i></i><i></i><i></i></span></button>{btn("Onde comprar", "onde-encontrar.html", "primary", ic="pin", ic_first=True)}</div>
     </div>
   </div>
 </section>
@@ -702,7 +771,7 @@ def flavor_page(f):
     rose_grad = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="rose-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8A0BF"/><stop offset="1" stop-color="#7B2D8E"/></linearGradient></defs></svg>' if premium else ''
     hero_bubbles = bubbles_canvas(100, color="255, 222, 236", mode="sparkle") if premium else bubbles_canvas(36)
     hero_btn2 = btn("Ver ingredientes", "#ingredientes", "ghost")
-    hero_btn1 = btn("Onde comprar", "onde-encontrar.html", "yellow" if f.get('header_light') else "dark", ic="pin", ic_first=True)
+    hero_btn1 = btn("Onde comprar", "onde-encontrar.html", "ghost", ic="pin", ic_first=True)
     wave_after_hero = '#FCF6F8' if premium else '#FAFAFA'
     main = f'''
 <section class="flavor-hero" aria-labelledby="fl-title">
@@ -714,7 +783,8 @@ def flavor_page(f):
       <h1 class="flavor-hero__name" id="fl-title"><img class="flavor-hero__logo" data-intro-fade src="assets/img/{"logo-frizza-branco.png" if f.get("header_light") else "logo-frizza.png"}" alt="FRIZZA" width="796" height="429"> <span data-split="chars" data-intro>{f["name"]}</span></h1>
       <p class="flavor-hero__slogan" data-intro-fade>“{f["slogan"]}”</p>
       <p class="flavor-hero__desc" data-intro-fade>{f["desc"]}</p>
-      <div class="btn-row" data-intro-fade>{hero_btn1}{hero_btn2}</div>
+      <p class="flavor-hero__price" data-intro-fade><strong>{brl(f["price"])}</strong> · lata 350 ml</p>
+      <div class="btn-row" data-intro-fade>{cart_btn(f, "white" if f.get("header_light") else "dark", "btn--lg")}{hero_btn1}{hero_btn2}</div>
       <ul class="flavor-hero__facts" role="list" data-intro-fade>{facts}</ul>
     </div>
     <div class="flavor-hero__visual">
@@ -788,8 +858,8 @@ def flavor_page(f):
     <div class="buy-band" style="margin-top:clamp(50px,7vw,90px)" data-reveal>
       <span class="blob" aria-hidden="true"></span>
       <div style="position:relative"><p class="eyebrow" style="color:var(--amarelo-solar)">Bateu vontade?</p><h2>Garanta sua FRIZZA {f["name"]}</h2>
-        <p style="margin-top:12px;max-width:520px">Encontre um ponto de venda pertinho de você ou receba em casa, em qualquer lugar do Brasil.</p></div>
-      <div class="btn-row" style="position:relative">{btn("Onde comprar", "onde-encontrar.html", "primary", ic="pin", ic_first=True)}{btn("Comprar online", "onde-encontrar.html#loja-online", "yellow", ic="cart", ic_first=True)}</div>
+        <p style="margin-top:12px;max-width:520px">Receba em casa, em qualquer lugar do Brasil, ou encontre um ponto de venda pertinho de você. {brl(f["price"])} a lata.</p></div>
+      <div class="btn-row" style="position:relative">{cart_btn(f, "yellow")}{btn("Onde comprar", "onde-encontrar.html", "primary", ic="pin", ic_first=True)}</div>
     </div>
   </div>
 </section>
@@ -1037,8 +1107,8 @@ onde = f'''
   <div class="container" style="position:relative;z-index:2">
     <p class="eyebrow" data-intro-fade>Mais de 200 pontos no Sul e Sudeste</p>
     <h1 class="page-hero__title" id="onde-title" data-split="chars" data-intro>Onde encontrar</h1>
-    <p class="page-hero__lead" data-intro-fade>Procure pela sua cidade ou estado e descubra a geladeira mais próxima com FRIZZA. Prefere receber em casa? A loja online entrega no Brasil todo.</p>
-    <div class="btn-row" style="margin-top:28px" data-intro-fade>{btn("Comprar online", "#loja-online", "dark", ic="cart", ic_first=True)}</div>
+    <p class="page-hero__lead" data-intro-fade>Procure pela sua cidade ou estado e descubra a geladeira mais próxima com FRIZZA. Prefere receber em casa? Compre aqui no site e a gente entrega no Brasil todo.</p>
+    <div class="btn-row" style="margin-top:28px" data-intro-fade>{btn("Comprar online", "sabores.html", "dark", ic="cart", ic_first=True)}</div>
   </div>
   {wave("#FAFAFA")}
 </section>
@@ -1059,7 +1129,7 @@ onde = f'''
     <div class="stores-layout">
       <div>
         <ul class="stores" role="list" data-stagger>{stores}</ul>
-        <div class="stores-empty"><p><strong>Ainda não chegamos aí 😢</strong></p><p>Mas a loja online entrega em qualquer CEP do Brasil!</p><p style="margin-top:14px">{btn("Ir para a loja online", "#loja-online", "primary", ic="cart", ic_first=True, size="btn--sm")}</p></div>
+        <div class="stores-empty"><p><strong>Ainda não chegamos aí 😢</strong></p><p>Mas a gente entrega em qualquer CEP do Brasil!</p><p style="margin-top:14px">{btn("Comprar online", "sabores.html", "primary", ic="cart", ic_first=True, size="btn--sm")}</p></div>
       </div>
       <figure class="stores-map" id="stores-map" data-reveal tabindex="-1">
         <iframe title="Mapa do ponto de venda selecionado: {DEFAULT_STORE}" src="https://www.google.com/maps?q={quote(DEFAULT_Q)}&amp;z=15&amp;output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
@@ -1070,24 +1140,6 @@ onde = f'''
           {btn("Abrir no Google Maps", maps_link(DEFAULT_Q.replace(", Brasil", "")), "primary", ic="compass", ic_first=True, size="btn--sm stores-map__link", attrs='target="_blank" rel="noopener"', magnetic=False)}
         </figcaption>
       </figure>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="loja-online" aria-labelledby="shop-title">
-  <div class="container">
-    <div class="shop-online">
-      {bubbles_canvas(24)}
-      <div style="position:relative;z-index:1">
-        <p class="eyebrow" style="color:var(--preto-suave)">Loja online</p>
-        <h2 id="shop-title" data-split="words">Compre online com entrega para todo o Brasil</h2>
-        <ul class="perks" role="list">
-          <li>{icon("truck")}Entrega nacional</li><li>{icon("gift")}Kits com os 5 sabores</li><li>{icon("recycle")}Embalagem reciclável</li>
-        </ul>
-        <div class="btn-row">{btn("Ir para a loja online", "https://loja.frizza.com.br", "dark", ic="cart", ic_first=True, size="btn--lg", attrs=f'data-demo="{DEMO_SHOP}"')}</div>
-        <p class="small" style="margin-top:14px;font-weight:500">Frete grátis acima de R$ 150 para o Sul e Sudeste. Pagamento por Pix, cartão ou boleto.</p>
-      </div>
-      {slot("loja-online-caixa.jpg", 1200, 1200, "Caixa de presente da FRIZZA com as cinco latas coloridas", "Caixa de presente kraft aberta com as cinco latas coloridas da FRIZZA acomodadas em papel colorido, frutas ao redor (laranja, açaí, limão, pêssego, uva), vista de cima, fundo amarelo solar, luz suave.", "Loja online", reveal="mask")}
     </div>
   </div>
 </section>
@@ -1271,6 +1323,132 @@ contato = f'''
 page('contato.html', 'Contato | FRIZZA Refrigerantes',
      'Fale com a FRIZZA pelo WhatsApp, e-mail ou formulário. Perguntas frequentes sobre ingredientes, açúcar, devolução de garrafas e revenda.',
      contato, 'contato.html', theme_color='#FFD23F', body_attrs='data-theme="solar" data-cta="orange"')
+
+
+# =================================================================== CHECKOUT
+set_page('checkout.html')
+UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
+uf_opts = '<option value="">Selecione</option>' + ''.join(f'<option value="{u}">{u}</option>' for u in UFS)
+def field(id_, label, typ='text', ac='', req=True, extra='', hint='', msg='', width=''):
+    r = ' required' if req else ''
+    star = ' <span class="req" aria-hidden="true">*</span>' if req else ' <span class="muted small">(opcional)</span>'
+    h = f'<p class="field__hint" id="{id_}-hint">{hint}</p>' if hint else ''
+    desc = f'{id_}-hint {id_}-err' if hint else f'{id_}-err'
+    m = f' data-msg-empty="{msg}"' if msg else ''
+    return (f'<div class="field {width}"{m}><label for="{id_}">{label}{star}</label>'
+            f'<input id="{id_}" name="{id_}" type="{typ}" autocomplete="{ac or "off"}"{r} {extra} aria-describedby="{desc}">{h}'
+            f'<p class="field__error" id="{id_}-err">{icon("close")}<span></span></p></div>')
+checkout = f'''
+<section class="page-hero checkout-hero" data-theme="solar" aria-labelledby="co-title">
+  <div class="container" style="position:relative;z-index:2">
+    <p class="eyebrow" data-intro-fade>Loja FRIZZA</p>
+    <h1 class="page-hero__title checkout-hero__title" id="co-title" data-split="words" data-intro>Finalizar compra</h1>
+    <ol class="co-steps" role="list" aria-label="Etapas da compra">
+      <li class="is-current" data-co-step-label="0"><span>1</span>Seus dados</li>
+      <li data-co-step-label="1"><span>2</span>Entrega</li>
+      <li data-co-step-label="2"><span>3</span>Pagamento</li>
+      <li data-co-step-label="3"><span>{icon("check")}</span>Pronto!</li>
+    </ol>
+  </div>
+  {wave("#FAFAFA")}
+</section>
+
+<section class="section section--tight" aria-label="Formulário de compra" data-checkout>
+  <div class="container checkout">
+    <div class="checkout__main">
+      <div class="co-empty" data-co-empty hidden>{icon("cart")}<h2>Seu carrinho está vazio</h2><p>Escolha seus sabores favoritos e volte aqui para finalizar.</p>
+        {btn("Ver sabores", "sabores.html", "primary", ic="arrow")}</div>
+
+      <form class="form co-form" data-co-form novalidate aria-label="Dados da compra">
+        <fieldset class="co-panel is-current" data-co-panel="0">
+          <legend class="h3">1. Seus dados</legend>
+          <div class="co-grid">
+            {field("co-nome", "Nome completo", ac="name", msg="Digite seu nome completo.", width="co-full")}
+            {field("co-email", "E-mail", "email", "email", extra='placeholder="nome@email.com"', hint="Enviamos a confirmação do pedido para ele.", msg="Precisamos do seu e-mail para enviar o pedido.")}
+            {field("co-tel", "Celular / WhatsApp", "tel", "tel", extra='inputmode="numeric" placeholder="(00) 00000-0000" data-mask="tel" minlength="14"', msg="Digite seu celular com DDD.")}
+            {field("co-cpf", "CPF", "text", extra='inputmode="numeric" placeholder="000.000.000-00" data-mask="cpf" minlength="14"', hint="Necessário para a nota fiscal. Use um CPF fictício: é uma simulação.", msg="Digite o CPF (11 números).")}
+          </div>
+          <div class="co-nav"><button class="btn btn--primary" type="button" data-co-next><span>Continuar para entrega</span>{icon("arrow", "icon--arrow")}</button></div>
+        </fieldset>
+
+        <fieldset class="co-panel" data-co-panel="1" hidden>
+          <legend class="h3">2. Entrega</legend>
+          <div class="co-grid">
+            {field("co-cep", "CEP", "text", "postal-code", extra='inputmode="numeric" placeholder="00000-000" data-mask="cep" minlength="9"', msg="Digite o CEP (8 números).")}
+            <div class="field" data-msg-empty="Selecione o estado."><label for="co-uf">Estado <span class="req" aria-hidden="true">*</span></label>
+              <select id="co-uf" name="co-uf" required aria-describedby="co-uf-err" autocomplete="address-level1">{uf_opts}</select>
+              <p class="field__error" id="co-uf-err">{icon("close")}<span></span></p></div>
+            {field("co-cidade", "Cidade", ac="address-level2", msg="Digite a cidade.")}
+            {field("co-bairro", "Bairro", ac="address-level3", msg="Digite o bairro.")}
+            {field("co-rua", "Rua / Avenida", ac="address-line1", msg="Digite o endereço.", width="co-full")}
+            {field("co-num", "Número", ac="", extra='inputmode="numeric"', msg="Digite o número (ou s/n).")}
+            {field("co-comp", "Complemento", req=False, ac="address-line2", extra='placeholder="Apto, bloco, referência"')}
+          </div>
+          <fieldset class="field co-options" data-msg-empty="Escolha uma forma de entrega.">
+            <legend>Forma de entrega <span class="req" aria-hidden="true">*</span></legend>
+            <label class="co-option"><input type="radio" name="co-frete" value="padrao" required aria-describedby="co-frete-err" checked><span class="co-option__body"><b>Entrega padrão</b><small>5 a 8 dias úteis</small></span><span class="co-option__price" data-frete-price="padrao"></span></label>
+            <label class="co-option"><input type="radio" name="co-frete" value="expressa"><span class="co-option__body"><b>Entrega expressa</b><small>2 a 3 dias úteis</small></span><span class="co-option__price" data-frete-price="expressa"></span></label>
+            <label class="co-option"><input type="radio" name="co-frete" value="retirada"><span class="co-option__body"><b>Retirar na Loja Conceito</b><small>Gramado (RS), em 1 dia útil</small></span><span class="co-option__price" data-frete-price="retirada"></span></label>
+            <p class="field__error" id="co-frete-err">{icon("close")}<span></span></p>
+          </fieldset>
+          <div class="co-nav"><button class="btn btn--ghost" type="button" data-co-prev><span>Voltar</span></button>
+            <button class="btn btn--primary" type="button" data-co-next><span>Continuar para pagamento</span>{icon("arrow", "icon--arrow")}</button></div>
+        </fieldset>
+
+        <fieldset class="co-panel" data-co-panel="2" hidden>
+          <legend class="h3">3. Pagamento</legend>
+          <p class="co-demo">{icon("eye")}<span><strong>Simulação acadêmica:</strong> nenhum pagamento é processado e nenhum dado sai do seu navegador. Não use dados reais de cartão.</span></p>
+          <fieldset class="field co-options co-pay" data-msg-empty="Escolha a forma de pagamento.">
+            <legend>Forma de pagamento <span class="req" aria-hidden="true">*</span></legend>
+            <label class="co-option"><input type="radio" name="co-pag" value="pix" required aria-describedby="co-pag-err" checked><span class="co-option__body"><b>Pix</b><small>Aprovação na hora · 5% de desconto</small></span></label>
+            <label class="co-option"><input type="radio" name="co-pag" value="cartao"><span class="co-option__body"><b>Cartão de crédito</b><small>Em até 3x sem juros</small></span></label>
+            <label class="co-option"><input type="radio" name="co-pag" value="boleto"><span class="co-option__body"><b>Boleto bancário</b><small>Vence em 2 dias úteis</small></span></label>
+            <p class="field__error" id="co-pag-err">{icon("close")}<span></span></p>
+          </fieldset>
+          <div class="co-pay-detail" data-pay-detail="pix"><p>{icon("bolt" if False else "sparkle")}Ao confirmar, você recebe o QR Code do Pix (simulado) com <strong>5% de desconto</strong>.</p></div>
+          <div class="co-pay-detail co-grid" data-pay-detail="cartao" hidden>
+            {field("co-card", "Número do cartão", "text", extra='inputmode="numeric" placeholder="0000 0000 0000 0000" data-mask="card" minlength="19" data-pay-req', msg="Digite os 16 números do cartão (fictício).", width="co-full")}
+            {field("co-card-nome", "Nome impresso no cartão", extra='data-pay-req', msg="Digite o nome como está no cartão.", width="co-full")}
+            {field("co-card-val", "Validade", "text", extra='inputmode="numeric" placeholder="MM/AA" data-mask="val" minlength="5" data-pay-req', msg="Digite a validade (MM/AA).")}
+            {field("co-card-cvv", "CVV", "text", extra='inputmode="numeric" placeholder="000" data-mask="cvv" minlength="3" data-pay-req', msg="Digite os 3 números do verso.")}
+            <div class="field co-full"><label for="co-parcelas">Parcelas</label><select id="co-parcelas" name="co-parcelas" data-parcelas></select></div>
+          </div>
+          <div class="co-pay-detail" data-pay-detail="boleto" hidden><p>{icon("news")}O boleto (simulado) é gerado ao confirmar e o pedido é enviado após a compensação.</p></div>
+          <p class="co-error" data-co-error role="alert"></p>
+          <div class="co-nav"><button class="btn btn--ghost" type="button" data-co-prev><span>Voltar</span></button>
+            <button class="btn btn--primary btn--lg" type="submit" data-co-submit>{icon("check")}<span>Confirmar pedido</span><span class="btn__bubbles" aria-hidden="true"><i></i><i></i><i></i></span></button></div>
+        </fieldset>
+      </form>
+
+      <div class="co-success" data-co-success hidden tabindex="-1">
+        <svg class="check" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46"/><path d="M30 52 l14 14 l27 -30"/></svg>
+        <h2>Pedido confirmado!</h2>
+        <p class="co-success__num">Pedido <strong data-co-order></strong></p>
+        <p data-co-success-msg></p>
+        <div class="co-pix" data-co-pix hidden><div class="co-pix__qr" aria-hidden="true"></div><p>QR Code Pix <strong>simulado</strong>. Em uma loja real, você escanearia este código no app do banco.</p></div>
+        <p class="small muted">Simulação acadêmica: nenhum pagamento foi processado e nenhum dado foi enviado.</p>
+        <div class="btn-row" style="justify-content:center">{btn("Voltar para a home", "index.html", "dark")}{btn("Ver mais sabores", "sabores.html", "yellow", ic="arrow")}</div>
+      </div>
+    </div>
+
+    <aside class="co-summary" aria-labelledby="co-sum-title" data-co-summary>
+      <h2 class="h3" id="co-sum-title">Resumo do pedido</h2>
+      <ul class="co-summary__items" role="list" data-co-items></ul>
+      <dl class="co-summary__totals">
+        <div><dt>Subtotal</dt><dd data-co-subtotal>R$ 0,00</dd></div>
+        <div><dt>Entrega</dt><dd data-co-frete>—</dd></div>
+        <div class="co-discount" data-co-discount-row hidden><dt>Desconto Pix (5%)</dt><dd data-co-discount></dd></div>
+        <div class="co-summary__total"><dt>Total</dt><dd data-co-total>R$ 0,00</dd></div>
+      </dl>
+      <p class="small muted">Frete grátis acima de R$ 150 para o Sul e Sudeste na entrega padrão.</p>
+      <button class="link-arrow co-summary__edit" type="button" data-open-cart>Editar carrinho {icon("arrow")}</button>
+    </aside>
+  </div>
+</section>
+'''
+page('checkout.html', 'Finalizar compra | FRIZZA Refrigerantes',
+     'Finalize sua compra na loja FRIZZA: dados, entrega e pagamento (simulação acadêmica).',
+     checkout, '', theme_color='#FFD23F', body_attrs='data-theme="solar" data-cta="orange" data-page="checkout"')
 
 # =================================================================== ESCRITA
 for name, content in PAGES:

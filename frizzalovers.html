@@ -38,9 +38,26 @@
     <a class="logo" href="index.html" aria-label="FRIZZA, ir para a página inicial"><span class="logo-slot logo-slot--color" data-img="assets/img/logo-frizza.png" data-alt="FRIZZA"><span class="logo-word" aria-hidden="true">FR<span class="logo-i">I<span class="logo-bubble"></span></span>ZZA</span></span><span class="logo-slot logo-slot--white" data-img="assets/img/logo-frizza-branco.png" data-alt="FRIZZA"><span class="logo-word" aria-hidden="true">FR<span class="logo-i">I<span class="logo-bubble"></span></span>ZZA</span></span></a>
     <nav class="nav" aria-label="Menu principal"><ul class="nav-list" role="list"><li><a class="nav-link" href="index.html">Home</a></li><li><a class="nav-link" href="sabores.html">Nossos Sabores</a></li><li><a class="nav-link" href="historia.html">Nossa História</a></li><li><a class="nav-link" href="onde-encontrar.html">Onde Encontrar</a></li><li><a class="nav-link" href="frizzalovers.html" aria-current="page">#FRIZZALOVERS</a></li><li><a class="nav-link" href="contato.html">Contato</a></li></ul></nav>
     <a class="btn btn--yellow btn--sm header-cta" href="onde-encontrar.html" data-magnetic ><span><span class="icon icon--pin " aria-hidden="true"><svg focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 5-5.5 10.2-7.4 11.8a1 1 0 0 1-1.2 0C9.5 20.2 4 15 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg></span>Onde Comprar</span><span class="btn__bubbles" aria-hidden="true"><i></i><i></i><i></i></span></a>
+    <button class="cart-toggle" type="button" aria-controls="cart-drawer" aria-expanded="false" aria-label="Abrir carrinho, 0 itens" data-open-cart><span class="icon icon--cart " aria-hidden="true"><svg focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 2.5h2.5l2.7 12.4a2 2 0 0 0 2 1.6h9.6a2 2 0 0 0 2-1.6L22 7H5.6"/></svg></span><span class="cart-count" data-cart-count aria-hidden="true">0</span></button>
     <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Abrir menu"><span></span><span></span></button>
   </div>
 </header>
+<div class="cart-drawer" id="cart-drawer" aria-hidden="true">
+  <div class="cart-drawer__overlay" data-close-cart></div>
+  <aside class="cart-drawer__panel" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+    <header class="cart-drawer__head"><h2 id="cart-title">Seu carrinho</h2>
+      <button class="cart-drawer__close" type="button" data-close-cart aria-label="Fechar carrinho"><span class="icon icon--close " aria-hidden="true"><svg focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></button></header>
+    <ul class="cart-items" role="list" data-cart-items></ul>
+    <div class="cart-empty" data-cart-empty><span class="icon icon--cart " aria-hidden="true"><svg focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 2.5h2.5l2.7 12.4a2 2 0 0 0 2 1.6h9.6a2 2 0 0 0 2-1.6L22 7H5.6"/></svg></span><p><strong>Seu carrinho está vazio.</strong></p><p>Que tal começar pelo carro-chefe, a Laranja Bahia?</p>
+      <a class="btn btn--primary btn--sm" href="sabores.html"><span>Ver sabores</span></a></div>
+    <footer class="cart-drawer__foot" data-cart-foot>
+      <p class="cart-drawer__ship" data-cart-ship></p>
+      <p class="cart-drawer__total"><span>Subtotal</span><strong data-cart-subtotal>R$ 0,00</strong></p>
+      <a class="btn btn--primary cart-drawer__checkout" href="checkout.html"><span>Finalizar compra</span><span class="icon icon--arrow icon--arrow" aria-hidden="true"><svg focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span><span class="btn__bubbles" aria-hidden="true"><i></i><i></i><i></i></span></a>
+      <button class="cart-drawer__continue" type="button" data-close-cart>Continuar comprando</button>
+    </footer>
+  </aside>
+</div>
 <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
   <div class="mobile-menu__inner">
     <span class="mobile-menu__blob mobile-menu__blob--1" aria-hidden="true"></span>
@@ -140,7 +157,7 @@
         <li><a href="frizzalovers.html">#FRIZZALOVERS</a></li><li><a href="contato.html#imprensa">Imprensa</a></li></ul></nav>
       <nav class="footer-col" aria-labelledby="f-sab"><h3 id="f-sab">Sabores</h3><ul role="list"><li><a href="sabor-laranja-bahia.html">Laranja Bahia</a></li><li><a href="sabor-acai-guarana.html">Açaí com Guaraná</a></li><li><a href="sabor-limao-hortela.html">Limão com Hortelã</a></li><li><a href="sabor-pessego-gengibre.html">Pêssego com Gengibre</a></li><li><a href="sabor-uva-rose.html">Uva Rosé</a></li></ul></nav>
       <nav class="footer-col" aria-labelledby="f-aj"><h3 id="f-aj">Ajuda</h3><ul role="list">
-        <li><a href="onde-encontrar.html">Onde comprar</a></li><li><a href="onde-encontrar.html#loja-online">Loja online</a></li>
+        <li><a href="onde-encontrar.html">Onde comprar</a></li><li><a href="sabores.html">Comprar online</a></li><li><a href="checkout.html">Finalizar compra</a></li>
         <li><a href="contato.html#faq">Perguntas frequentes</a></li><li><a href="contato.html#faq">Devolução de garrafas</a></li></ul></nav>
       <div class="footer-col"><h3>Contato</h3><ul role="list">
         <li><a href="https://wa.me/5554999990000" data-demo="Contato ilustrativo: a FRIZZA é uma marca fictícia criada para um projeto acadêmico.">WhatsApp (54) 99999-0000</a></li>

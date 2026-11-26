@@ -35,7 +35,8 @@
     'historia.html': '#2EC4B6',
     'onde-encontrar.html': '#FF6B2B',
     'frizzalovers.html': '#7B2D8E',
-    'contato.html': '#FFD23F'
+    'contato.html': '#FFD23F',
+    'checkout.html': '#FFD23F'
   };
 
   let lenis = null;
@@ -794,36 +795,38 @@
   /* ---------------------------------------------------------------------
      16. FORMULÁRIOS (validação amigável, só front-end)
      ------------------------------------------------------------------- */
+  function checkField(f) {
+    const inp = f.querySelector('input, select, textarea');
+    const err = f.querySelector('.field__error span:not(.icon)');
+    let ok = true;
+    let msg = '';
+    if (inp.type === 'radio') {
+      ok = !!f.querySelector('input:checked');
+      msg = f.dataset.msgEmpty || 'Escolha uma opção.';
+    } else if (inp.type === 'checkbox') {
+      ok = inp.checked;
+      msg = f.dataset.msgEmpty || 'Marque esta opção para continuar.';
+    } else if (!inp.value.trim()) {
+      ok = false; msg = f.dataset.msgEmpty || 'Preencha este campo.';
+    } else if (inp.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(inp.value.trim())) {
+      ok = false; msg = f.dataset.msgInvalid || 'Confira o e-mail: ele precisa ter @ e um domínio, como nome@email.com.';
+    } else if (inp.minLength > 0 && inp.value.trim().length < inp.minLength) {
+      ok = false; msg = f.dataset.msgShort || f.dataset.msgEmpty || `Escreva pelo menos ${inp.minLength} caracteres.`;
+    }
+    f.classList.toggle('is-invalid', !ok);
+    f.classList.toggle('is-valid', ok);
+    f.querySelectorAll('input, select, textarea').forEach((i) => i.setAttribute('aria-invalid', String(!ok)));
+    if (err) err.textContent = ok ? '' : msg;
+    return ok;
+  }
+
   function initForms() {
     $$('form[data-validate]').forEach((form) => {
       form.noValidate = true;
       const fields = $$('.field', form).filter((f) => f.querySelector('[required]'));
       const msgBox = $('[data-form-msg]', form);
 
-      const check = (f) => {
-        const inp = f.querySelector('input, select, textarea');
-        const err = f.querySelector('.field__error span');
-        let ok = true;
-        let msg = '';
-        if (inp.type === 'radio') {
-          ok = !!f.querySelector('input:checked');
-          msg = f.dataset.msgEmpty || 'Escolha uma opção.';
-        } else if (inp.type === 'checkbox') {
-          ok = inp.checked;
-          msg = f.dataset.msgEmpty || 'Marque esta opção para continuar.';
-        } else if (!inp.value.trim()) {
-          ok = false; msg = f.dataset.msgEmpty || 'Preencha este campo.';
-        } else if (inp.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(inp.value.trim())) {
-          ok = false; msg = f.dataset.msgInvalid || 'Confira o e-mail: ele precisa ter @ e um domínio, como nome@email.com.';
-        } else if (inp.minLength > 0 && inp.value.trim().length < inp.minLength) {
-          ok = false; msg = f.dataset.msgShort || `Escreva pelo menos ${inp.minLength} caracteres.`;
-        }
-        f.classList.toggle('is-invalid', !ok);
-        f.classList.toggle('is-valid', ok);
-        f.querySelectorAll('input, select, textarea').forEach((i) => i.setAttribute('aria-invalid', String(!ok)));
-        if (err) err.textContent = ok ? '' : msg;
-        return ok;
-      };
+      const check = checkField;
 
       fields.forEach((f) => {
         f.querySelectorAll('input, select, textarea').forEach((inp) => {
@@ -869,7 +872,7 @@
      17. LINKS DE DEMONSTRAÇÃO (redes, loja, WhatsApp — marca fictícia)
      ------------------------------------------------------------------- */
   let toastTimer = 0;
-  function toast(text) {
+  function toast(text, action) {
     let t = $('.toast');
     if (!t) {
       t = d.createElement('div');
@@ -878,7 +881,17 @@
       t.setAttribute('aria-live', 'polite');
       d.body.appendChild(t);
     }
-    t.textContent = text;
+    const msg = d.createElement('span');
+    msg.textContent = text;
+    t.replaceChildren(msg);
+    if (action) {
+      const b = d.createElement('button');
+      b.type = 'button';
+      b.className = 'toast__action';
+      b.textContent = action.label;
+      b.addEventListener('click', () => { t.classList.remove('is-visible'); action.onClick(); });
+      t.appendChild(b);
+    }
     requestAnimationFrame(() => t.classList.add('is-visible'));
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => t.classList.remove('is-visible'), 3800);
@@ -930,6 +943,471 @@
     });
   }
 
+
+  /* ---------------------------------------------------------------------
+     19. LOJA ONLINE — carrinho, quiz de sabores e checkout (simulação)
+     O carrinho fica salvo no navegador (localStorage) e acompanha a pessoa
+     por todas as páginas. Nada é enviado para servidor nenhum.
+     ------------------------------------------------------------------- */
+  const CART_KEY = 'frizza-cart';
+  const FREE_SHIP = 150;
+  const brl = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const Cart = {
+    items: [],
+    load() {
+      try { this.items = JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch (e) { this.items = []; }
+      if (!Array.isArray(this.items)) this.items = [];
+      this.items = this.items.filter((i) => i && i.id && i.qty > 0 && isFinite(i.price));
+    },
+    save() {
+      try { localStorage.setItem(CART_KEY, JSON.stringify(this.items)); } catch (e) { /* modo privado */ }
+      d.dispatchEvent(new CustomEvent('cart:change'));
+    },
+    add(prod, qty = 1) {
+      const it = this.items.find((i) => i.id === prod.id);
+      if (it) it.qty = Math.min(99, it.qty + qty); else this.items.push({ ...prod, qty });
+      this.save();
+    },
+    setQty(id, q) {
+      const it = this.items.find((i) => i.id === id);
+      if (!it) return;
+      it.qty = Math.max(0, Math.min(99, q));
+      if (!it.qty) this.items = this.items.filter((i) => i.id !== id);
+      this.save();
+    },
+    remove(id) { this.items = this.items.filter((i) => i.id !== id); this.save(); },
+    clear() { this.items = []; this.save(); },
+    count() { return this.items.reduce((a, i) => a + i.qty, 0); },
+    subtotal() { return this.items.reduce((a, i) => a + i.qty * i.price, 0); }
+  };
+  Cart.load();
+  const productFrom = (el) => ({ id: el.dataset.id, name: el.dataset.name, price: parseFloat(el.dataset.price), color: el.dataset.color, img: el.dataset.img, url: el.dataset.url });
+  let openCart = () => {};
+
+  function cartThumb(item) {
+    const t = d.createElement('span');
+    t.className = 'cart-thumb';
+    t.style.setProperty('--c', item.color || '#FF6B2B');
+    t.setAttribute('aria-hidden', 'true');
+    if (item.img) {
+      const img = new Image();
+      img.alt = '';
+      img.onload = () => t.appendChild(img);
+      img.src = item.img;
+    }
+    return t;
+  }
+
+  function initCart() {
+    const drawer = $('#cart-drawer');
+    if (!drawer) return;
+    const panel = $('.cart-drawer__panel', drawer);
+    const list = $('[data-cart-items]', drawer);
+    const empty = $('[data-cart-empty]', drawer);
+    const foot = $('[data-cart-foot]', drawer);
+    const sub = $('[data-cart-subtotal]', drawer);
+    const ship = $('[data-cart-ship]', drawer);
+    const toggles = $$('.cart-toggle');
+    const counts = $$('[data-cart-count]');
+    let isOpen = false;
+    let lastFocus = null;
+
+    const row = (it) => {
+      const li = d.createElement('li');
+      li.className = 'cart-item';
+      li.appendChild(cartThumb(it));
+      const info = d.createElement('div');
+      info.className = 'cart-item__info';
+      const name = d.createElement('a');
+      name.className = 'cart-item__name';
+      name.href = it.url || 'sabores.html';
+      name.textContent = it.name;
+      const unit = d.createElement('span');
+      unit.className = 'cart-item__unit';
+      unit.textContent = `${brl(it.price)} cada`;
+      const qty = d.createElement('div');
+      qty.className = 'qty';
+      qty.setAttribute('role', 'group');
+      qty.setAttribute('aria-label', `Quantidade de ${it.name}`);
+      qty.innerHTML = '<button type="button" data-qty="-1">−</button><output aria-live="polite"></output><button type="button" data-qty="1">+</button>';
+      qty.querySelector('output').textContent = it.qty;
+      qty.querySelector('[data-qty="-1"]').setAttribute('aria-label', `Diminuir ${it.name}`);
+      qty.querySelector('[data-qty="1"]').setAttribute('aria-label', `Aumentar ${it.name}`);
+      info.append(name, unit, qty);
+      const side = d.createElement('div');
+      side.className = 'cart-item__side';
+      const total = d.createElement('strong');
+      total.textContent = brl(it.price * it.qty);
+      const rm = d.createElement('button');
+      rm.type = 'button';
+      rm.className = 'cart-item__remove';
+      rm.dataset.remove = '';
+      rm.textContent = 'Remover';
+      rm.setAttribute('aria-label', `Remover ${it.name} do carrinho`);
+      side.append(total, rm);
+      li.append(info, side);
+      li.dataset.id = it.id;
+      return li;
+    };
+
+    const render = () => {
+      const n = Cart.count();
+      counts.forEach((c) => { c.textContent = n; c.classList.toggle('is-empty', !n); });
+      toggles.forEach((t) => t.setAttribute('aria-label', `Abrir carrinho, ${n} ${n === 1 ? 'item' : 'itens'}`));
+      list.replaceChildren(...Cart.items.map(row));
+      empty.hidden = Cart.items.length > 0;
+      foot.hidden = Cart.items.length === 0;
+      const st = Cart.subtotal();
+      sub.textContent = brl(st);
+      ship.textContent = st >= FREE_SHIP ? 'Oba! Frete grátis para o Sul e Sudeste.' : `Faltam ${brl(FREE_SHIP - st)} para ganhar frete grátis no Sul e Sudeste.`;
+    };
+
+    list.addEventListener('click', (e) => {
+      const li = e.target.closest('.cart-item');
+      if (!li) return;
+      const it = Cart.items.find((i) => i.id === li.dataset.id);
+      const qb = e.target.closest('[data-qty]');
+      if (qb && it) {
+        Cart.setQty(it.id, it.qty + parseInt(qb.dataset.qty, 10));
+        const again = list.querySelector(`.cart-item[data-id="${it.id}"] [data-qty="${qb.dataset.qty}"]`);
+        (again || $('.cart-drawer__close', drawer)).focus();
+      }
+      if (e.target.closest('[data-remove]') && it) { Cart.remove(it.id); $('.cart-drawer__close', drawer).focus(); }
+    });
+
+    const setOpen = (v) => {
+      isOpen = v;
+      drawer.classList.toggle('is-open', v);
+      drawer.setAttribute('aria-hidden', String(!v));
+      drawer.inert = !v;
+      toggles.forEach((t) => t.setAttribute('aria-expanded', String(v)));
+      html.classList.toggle('cart-open', v);
+      if (lenis) v ? lenis.stop() : lenis.start();
+      if (v) {
+        lastFocus = d.activeElement;
+        setTimeout(() => $('.cart-drawer__close', drawer).focus(), 60);
+      } else if (lastFocus && lastFocus.focus) lastFocus.focus();
+    };
+    openCart = () => setOpen(true);
+    drawer.inert = true;
+
+    d.addEventListener('click', (e) => {
+      if (e.target.closest('[data-open-cart]')) {
+        e.preventDefault();
+        if (menuOpen && closeMenu) closeMenu(false, false);
+        setOpen(true);
+      } else if (e.target.closest('[data-close-cart]')) setOpen(false);
+
+      const add = e.target.closest('[data-add-cart]');
+      if (add) {
+        e.preventDefault();
+        const prod = productFrom(add);
+        Cart.add(prod);
+        const label = $('[data-cart-label]', add);
+        if (label) {
+          if (!label.dataset.orig) label.dataset.orig = label.textContent;
+          label.textContent = 'Adicionado!';
+          add.classList.add('is-added');
+          clearTimeout(add._t);
+          add._t = setTimeout(() => { label.textContent = label.dataset.orig; add.classList.remove('is-added'); }, 1600);
+        }
+        toggles.forEach((t) => { t.classList.remove('is-bump'); void t.offsetWidth; t.classList.add('is-bump'); });
+        toast(`${prod.name} foi para o carrinho!`, { label: 'Ver carrinho', onClick: () => setOpen(true) });
+      }
+    });
+
+    d.addEventListener('keydown', (e) => {
+      if (!isOpen) return;
+      if (e.key === 'Escape') { setOpen(false); return; }
+      if (e.key === 'Tab') { // mantém o foco dentro do carrinho
+        const f = $$('a[href], button:not([disabled]), input, select', panel).filter((x) => x.offsetParent !== null);
+        if (!f.length) return;
+        const first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && d.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && d.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
+
+    d.addEventListener('cart:change', render);
+    window.addEventListener('storage', (e) => { if (e.key === CART_KEY) { Cart.load(); render(); } });
+    render();
+  }
+
+  /* Quiz "Qual FRIZZA combina com você?" */
+  function initQuiz() {
+    const q = $('[data-quiz]');
+    if (!q) return;
+    const steps = $$('.quiz__step', q);
+    const back = $('[data-quiz-back]', q);
+    const count = $('[data-quiz-count]', q);
+    const bar = $('.quiz__bar i', q);
+    const form = $('.quiz__form', q);
+    const result = $('[data-quiz-result]', q);
+    const results = $('[data-quiz-results]', q);
+    const answers = new Array(steps.length).fill(null);
+    let cur = 0;
+
+    const maxPer = {};
+    steps.forEach((st) => {
+      const per = {};
+      $$('.quiz__opt', st).forEach((o) => Object.entries(JSON.parse(o.dataset.score)).forEach(([k, v]) => { per[k] = Math.max(per[k] || 0, v); }));
+      Object.entries(per).forEach(([k, v]) => { maxPer[k] = (maxPer[k] || 0) + v; });
+    });
+
+    const show = (i, dir = 1) => {
+      cur = i;
+      steps.forEach((st, k) => { st.hidden = k !== i; st.classList.toggle('is-current', k === i); });
+      back.hidden = i === 0;
+      count.textContent = `Pergunta ${i + 1} de ${steps.length}`;
+      bar.style.setProperty('--p', (i + 1) / steps.length);
+      if (motion) gsap.fromTo(steps[i].querySelectorAll('.quiz__q, .quiz__opt'), { x: 40 * dir, opacity: 0 }, { x: 0, opacity: 1, stagger: 0.05, duration: 0.45, ease: 'power3.out', clearProps: 'transform,opacity' });
+    };
+
+    const finish = () => {
+      const score = {};
+      answers.forEach((a) => a && Object.entries(a).forEach(([k, v]) => { score[k] = (score[k] || 0) + v; }));
+      const rank = Object.keys(maxPer)
+        .map((k) => ({ k, s: score[k] || 0, pct: Math.round((100 * (score[k] || 0)) / maxPer[k]) }))
+        .sort((a, b) => b.s - a.s || b.pct - a.pct);
+      const best = rank[0] ? rank[0].s : 0;
+      let top = rank.filter((r) => r.s > 0 && r.s >= best * 0.4).slice(0, 3);
+      if (!top.length) top = rank.slice(0, 2);
+      const title = $('.quiz__result-title', q);
+      if (title) title.textContent = top.length === 1 ? 'O sabor com a sua cara' : 'Os sabores com a sua cara';
+      const addAll = $('[data-quiz-add-all] span', q);
+      if (addAll) addAll.textContent = top.length === 1 ? 'Adicionar ao carrinho' : 'Adicionar os favoritos ao carrinho';
+      results.replaceChildren();
+      top.forEach((r, idx) => {
+        const tpl = q.querySelector(`template[data-quiz-product="${r.k}"]`);
+        if (!tpl) return;
+        const node = tpl.content.firstElementChild.cloneNode(true);
+        $('[data-match]', node).textContent = `${r.pct}%`;
+        if (idx === 0) node.classList.add('is-best');
+        results.appendChild(node);
+        $$('[data-img]', node).forEach(loadSlot);
+      });
+      form.hidden = true;
+      back.hidden = true;
+      count.textContent = 'Resultado';
+      bar.style.setProperty('--p', 1);
+      result.hidden = false;
+      result.focus({ preventScroll: true });
+      if (motion) gsap.fromTo($$('.quiz-result', results), { y: 40, opacity: 0, scale: 0.95 }, { y: 0, opacity: 1, scale: 1, stagger: 0.12, duration: 0.7, ease: 'back.out(1.5)', clearProps: 'transform,opacity' });
+      if (hasGSAP) ScrollTrigger.refresh();
+    };
+
+    q.addEventListener('click', (e) => {
+      const o = e.target.closest('.quiz__opt');
+      if (o) {
+        const st = o.closest('.quiz__step');
+        const i = parseInt(st.dataset.step, 10);
+        $$('.quiz__opt', st).forEach((b) => b.setAttribute('aria-pressed', String(b === o)));
+        answers[i] = JSON.parse(o.dataset.score);
+        setTimeout(() => {
+          if (i < steps.length - 1) {
+            show(i + 1);
+            const first = steps[i + 1].querySelector('.quiz__opt');
+            if (first) first.focus({ preventScroll: true });
+          } else finish();
+        }, 280);
+      }
+      if (e.target.closest('[data-quiz-add-all]')) {
+        const btns = $$('[data-add-cart]', results);
+        btns.forEach((b) => Cart.add(productFrom(b)));
+        toast(`${btns.length} ${btns.length === 1 ? 'sabor foi' : 'sabores foram'} para o carrinho!`, { label: 'Ver carrinho', onClick: () => openCart() });
+      }
+      if (e.target.closest('[data-quiz-restart]')) {
+        answers.fill(null);
+        $$('.quiz__opt', q).forEach((b) => b.setAttribute('aria-pressed', 'false'));
+        result.hidden = true;
+        form.hidden = false;
+        show(0);
+        const first = steps[0].querySelector('.quiz__opt');
+        if (first) first.focus({ preventScroll: true });
+      }
+    });
+    back.addEventListener('click', () => {
+      show(Math.max(0, cur - 1), -1);
+      const sel = steps[cur].querySelector('[aria-pressed="true"]') || steps[cur].querySelector('.quiz__opt');
+      if (sel) sel.focus({ preventScroll: true });
+    });
+  }
+
+  /* Máscaras de digitação (telefone, CPF, CEP, cartão) */
+  function initMasks() {
+    const fmt = (digits, pattern) => {
+      let out = '';
+      let i = 0;
+      for (const ch of pattern) {
+        if (i >= digits.length) break;
+        if (ch === '0') out += digits[i++]; else out += ch;
+      }
+      return out;
+    };
+    const PAT = {
+      tel: (v) => (v.length > 10 ? '(00) 00000-0000' : '(00) 0000-0000'),
+      cpf: () => '000.000.000-00',
+      cep: () => '00000-000',
+      card: () => '0000 0000 0000 0000',
+      val: () => '00/00',
+      cvv: () => '000'
+    };
+    d.addEventListener('input', (e) => {
+      const el = e.target;
+      const m = el.dataset && el.dataset.mask;
+      if (!m || !PAT[m]) return;
+      const digits = el.value.replace(/\D/g, '');
+      const pat = PAT[m](digits);
+      el.value = fmt(digits.slice(0, pat.split('0').length - 1), pat);
+    });
+  }
+
+  /* Checkout: dados → entrega → pagamento → confirmação (simulação) */
+  function initCheckout() {
+    const root = $('[data-checkout]');
+    if (!root) return;
+    const form = $('[data-co-form]', root);
+    const panels = $$('[data-co-panel]', root);
+    const labels = $$('[data-co-step-label]');
+    const empty = $('[data-co-empty]', root);
+    const success = $('[data-co-success]', root);
+    const summary = $('[data-co-summary]', root);
+    const itemsEl = $('[data-co-items]', root);
+    const subEl = $('[data-co-subtotal]', root);
+    const freteEl = $('[data-co-frete]', root);
+    const totalEl = $('[data-co-total]', root);
+    const discRow = $('[data-co-discount-row]', root);
+    const discEl = $('[data-co-discount]', root);
+    const parcelas = $('[data-parcelas]', root);
+    const errBox = $('[data-co-error]', root);
+    const FRETE = { padrao: 19.9, expressa: 34.9, retirada: 0 };
+    const SUL_SUDESTE = ['PR', 'SC', 'RS', 'SP', 'RJ', 'MG', 'ES'];
+    let step = 0;
+    let done = false;
+    const val = (name) => { const el = form.querySelector(`[name="${name}"]:checked`); return el ? el.value : ''; };
+
+    const calc = () => {
+      const sub = Cart.subtotal();
+      const uf = $('#co-uf').value;
+      const tipo = val('co-frete') || 'padrao';
+      const freeOk = sub >= FREE_SHIP && (!uf || SUL_SUDESTE.includes(uf));
+      let fr = FRETE[tipo];
+      if (tipo === 'padrao' && freeOk) fr = 0;
+      const disc = val('co-pag') === 'pix' ? Math.round(sub * 5) / 100 : 0;
+      return { sub, fr, disc, total: sub + fr - disc, freeOk, tipo };
+    };
+
+    const render = () => {
+      if (done) return;
+      const hasItems = Cart.items.length > 0;
+      form.hidden = !hasItems;
+      summary.hidden = !hasItems;
+      empty.hidden = hasItems;
+      const c = calc();
+      itemsEl.replaceChildren(...Cart.items.map((it) => {
+        const li = d.createElement('li');
+        li.className = 'co-summary__item';
+        li.appendChild(cartThumb(it));
+        const n = d.createElement('span');
+        n.className = 'co-summary__name';
+        n.textContent = `${it.name} × ${it.qty}`;
+        const t = d.createElement('strong');
+        t.textContent = brl(it.price * it.qty);
+        li.append(n, t);
+        return li;
+      }));
+      subEl.textContent = brl(c.sub);
+      freteEl.textContent = step === 0 ? 'calculado na próxima etapa' : (c.fr === 0 ? 'Grátis' : brl(c.fr));
+      discRow.hidden = !c.disc;
+      discEl.textContent = '− ' + brl(c.disc);
+      totalEl.textContent = brl(step === 0 ? c.sub - c.disc : c.total);
+      $$('[data-frete-price]', root).forEach((el) => {
+        const k = el.dataset.fretePrice;
+        el.textContent = k === 'retirada' || (k === 'padrao' && c.freeOk) ? 'Grátis' : brl(FRETE[k]);
+      });
+      if (parcelas) {
+        const sel = parcelas.value || '1';
+        parcelas.innerHTML = [1, 2, 3].map((k) => `<option value="${k}">${k}x de ${brl(c.total / k)} sem juros</option>`).join('');
+        parcelas.value = sel;
+      }
+    };
+
+    const fieldsOf = (panel) => $$('.field', panel).filter((f) => {
+      const inp = f.querySelector('[required], [data-pay-req]');
+      return inp && !f.closest('[hidden]');
+    });
+    const validate = (panel) => {
+      const bad = fieldsOf(panel).filter((f) => !checkField(f));
+      if (bad.length) {
+        const first = bad[0].querySelector('input, select, textarea');
+        if (first) first.focus();
+      }
+      return bad.length === 0;
+    };
+    form.addEventListener('input', (e) => { const f = e.target.closest('.field'); if (f && f.classList.contains('is-invalid')) checkField(f); });
+    form.addEventListener('focusout', (e) => { const f = e.target.closest('.field'); if (f && e.target.value && e.target.type !== 'radio' && (e.target.required || e.target.hasAttribute('data-pay-req'))) checkField(f); });
+
+    const scrollTop = () => {
+      const y = root.getBoundingClientRect().top + window.scrollY - 100;
+      if (lenis) lenis.scrollTo(y, { force: true }); else window.scrollTo({ top: y, behavior: reduce ? 'auto' : 'smooth' });
+    };
+    const goTo = (i) => {
+      step = i;
+      panels.forEach((pn, k) => { pn.hidden = k !== i; pn.classList.toggle('is-current', k === i); });
+      labels.forEach((l, k) => { l.classList.toggle('is-current', k === i); l.classList.toggle('is-done', k < i); });
+      render();
+      scrollTop();
+      const legend = $('legend', panels[i]);
+      if (legend) { legend.setAttribute('tabindex', '-1'); legend.focus({ preventScroll: true }); }
+      if (motion) gsap.fromTo(panels[i], { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out', clearProps: 'transform,opacity' });
+      if (hasGSAP) ScrollTrigger.refresh();
+    };
+    root.addEventListener('click', (e) => {
+      if (e.target.closest('[data-co-next]') && validate(panels[step])) goTo(step + 1);
+      if (e.target.closest('[data-co-prev]')) goTo(step - 1);
+    });
+    form.addEventListener('change', (e) => {
+      if (e.target.name === 'co-pag') {
+        $$('[data-pay-detail]', root).forEach((el) => { el.hidden = el.dataset.payDetail !== e.target.value; });
+        $$('[data-pay-detail="cartao"] .field', root).forEach((f) => f.classList.remove('is-invalid'));
+      }
+      render();
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (step !== 2) { if (validate(panels[step])) goTo(step + 1); return; }
+      if (!validate(panels[2])) { errBox.textContent = 'Confira os campos destacados para concluir.'; return; }
+      errBox.textContent = '';
+      const c = calc();
+      render();
+      done = true;
+      const order = 'FRZ-' + String(Date.now()).slice(-6);
+      $('[data-co-order]', root).textContent = order;
+      const nome = ($('#co-nome').value.trim().split(' ')[0]) || '';
+      const email = $('#co-email').value.trim();
+      const pag = val('co-pag');
+      const entrega = c.tipo === 'retirada'
+        ? 'Sua FRIZZA estará esperando na Loja Conceito, em Gramado (RS), em 1 dia útil.'
+        : `Entrega em ${$('#co-cidade').value.trim()}/${$('#co-uf').value} em ${c.tipo === 'expressa' ? '2 a 3' : '5 a 8'} dias úteis.`;
+      const pagMsg = pag === 'pix' ? `Pague ${brl(c.total)} com o Pix abaixo para liberar o envio.`
+        : pag === 'cartao' ? `Pagamento de ${brl(c.total)} aprovado em ${parcelas.value}x sem juros.`
+        : `O boleto de ${brl(c.total)} foi enviado para o seu e-mail.`;
+      $('[data-co-success-msg]', root).textContent = `Valeu, ${nome}! Enviamos a confirmação para ${email}. ${pagMsg} ${entrega}`;
+      $('[data-co-pix]', root).hidden = pag !== 'pix';
+      form.hidden = true;
+      success.hidden = false;
+      labels.forEach((l, k) => { l.classList.toggle('is-current', k === 3); l.classList.toggle('is-done', k < 3); });
+      Cart.clear();
+      scrollTop();
+      success.focus({ preventScroll: true });
+      if (motion) gsap.fromTo(success, { y: 30, opacity: 0, scale: 0.97 }, { y: 0, opacity: 1, scale: 1, duration: 0.7, ease: 'back.out(1.5)', clearProps: 'transform,opacity' });
+    });
+
+    d.addEventListener('cart:change', render);
+    render();
+  }
+
   /* ---------------------------------------------------------------------
      INICIALIZAÇÃO
      ------------------------------------------------------------------- */
@@ -949,6 +1427,10 @@
   safe('lightbox', initLightbox);
   safe('faq', initFaq);
   safe('formulários', initForms);
+  safe('carrinho', initCart);
+  safe('quiz', initQuiz);
+  safe('máscaras', initMasks);
+  safe('checkout', initCheckout);
   safe('títulos', splitHeadings);
   safe('reveals', initReveals);
   safe('manifesto', initManifesto);
