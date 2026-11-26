@@ -344,7 +344,7 @@ def head(title, desc, theme_color, serif=False):
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?{fonts}&display=swap">
-<link rel="stylesheet" href="assets/css/style.css?v=8">
+<link rel="stylesheet" href="assets/css/style.css?v=9">
 <script>
 /* Antes de pintar: define modo de animação, preloader (1ª visita) e cortina de transição */
 (function(){{var d=document.documentElement,rm=window.matchMedia('(prefers-reduced-motion: reduce)').matches;d.classList.add('js');if(!rm)d.classList.add('js-motion');try{{var pt=sessionStorage.getItem('frizza-pt');if(pt&&!rm){{d.classList.add('pt-enter');d.style.setProperty('--pt-color',pt);}}if(!sessionStorage.getItem('frizza-visited')&&!rm&&!pt)d.classList.add('has-preloader');}}catch(e){{}}setTimeout(function(){{if(!window.__frizzaReady)d.classList.remove('js-motion','pt-enter','has-preloader');}},4500);}})();
@@ -353,7 +353,7 @@ def head(title, desc, theme_color, serif=False):
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/split-type@0.3.4/umd/index.min.js"></script>
-<script defer src="assets/js/main.js?v=8"></script>
+<script defer src="assets/js/main.js?v=9"></script>
 </head>'''
 
 def preloader():
@@ -593,7 +593,7 @@ home = f'''
   <div class="manifesto__deco float" aria-hidden="true">{fruit("folha-tropical.png", "Manifesto (decoração)", label=False)}</div>
   <div class="container container--narrow">
     <h2 class="sr-only" id="manifesto-title">Manifesto FRIZZA</h2>
-    <p class="manifesto__text" data-manifesto>A FRIZZA nasceu do sonho de criar um refrigerante que representa o <span class="accent-1">sabor brasileiro</span> e valoriza o <span class="accent-2">pequeno produtor</span>. A gente pega <span class="accent-1">fruta brasileira de verdade</span>, de pequenos produtores, junta com gás na medida e <span class="accent-2">menos açúcar</span>. Sem corante artificial, sem conservante, sem enrolação. <span class="accent-3">Natural de verdade. Gostoso de verdade.</span> Simples assim.</p>
+    <p class="manifesto__text" data-manifesto>A FRIZZA nasceu do sonho de criar um refrigerante que representa o <span class="accent-1">sabor brasileiro</span> e valoriza o <span class="accent-2">pequeno produtor</span>. <span class="accent-3">Natural de verdade. Gostoso de verdade.</span> Simples assim.</p>
     <div class="manifesto__sign" data-reveal>{btn("Conheça nossa história", "historia.html", "mint", ic="arrow")}<span class="muted">Desde 2018, em Gramado (RS) 🫧</span></div>
   </div>
 </section>
@@ -639,8 +639,7 @@ home = f'''
 
 <section class="section" aria-labelledby="why-title">
   <div class="container">
-    <div class="section-head center"><p class="eyebrow">Por que FRIZZA</p><h2 id="why-title" data-split="words">Menos ingredientes estranhos, mais sabor inesquecível</h2>
-      <p>Menos ingredientes que você não sabe pronunciar, mais sabor que você não vai esquecer.</p></div>
+    <div class="section-head center"><p class="eyebrow">Por que FRIZZA</p><h2 id="why-title" data-split="words">“Menos ingredientes que você não sabe pronunciar, mais sabor que você não vai esquecer”</h2></div>
     <ul class="features" role="list" data-stagger>
       <li class="feature"><div class="feature__icon">{ICONS["leaf"]}</div><h3>Ingredientes naturais</h3><p>Fruta de verdade, extratos naturais e açúcar demerara orgânico. Sem corantes, aromas ou conservantes artificiais.</p></li>
       <li class="feature"><div class="feature__icon">{ICONS["drop"]}</div><h3>Menos açúcar</h3><p>Até 40% menos açúcar que os refrigerantes tradicionais. Doce na medida, sem adoçante artificial.</p></li>

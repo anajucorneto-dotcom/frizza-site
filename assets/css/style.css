@@ -1636,3 +1636,10 @@ table { border-collapse: collapse; }
 .vitrine__visual .vitrine__ring, .vitrine__visual:has(.is-cutout) .vitrine__ring { display: none; }
 .lightbox { margin: auto; inset: 0; }
 .lightbox__media .img-slot { width: 100%; }
+
+/* Títulos animados: espaço para descendentes (g, p, ç) sem cortar; hero mais compacto */
+.split-line { padding-bottom: .16em; margin-bottom: -.16em; }
+.hero__title { line-height: .84; }
+.hero__title .split-line { padding-bottom: .24em; margin-bottom: -.24em; padding-top: .04em; margin-top: -.04em; }
+.hero__title .line--2 { margin-top: .04em; }
+#why-title { font-size: clamp(1.9rem, 1.3rem + 2.4vw, 3.3rem); line-height: 1.12; }
