@@ -416,6 +416,7 @@
         clearProps: type === 'mask' ? 'clipPath,transform' : 'transform',
         scrollTrigger: { trigger: el, start: 'top 90%', once: true }
       });
+      el.classList.add('is-revealed'); // a partir daqui o GSAP controla a opacidade
     });
 
     $$('[data-stagger]').forEach((box) => {
@@ -425,6 +426,7 @@
         clearProps: 'transform',
         scrollTrigger: { trigger: box, start: 'top 88%', once: true }
       });
+      box.classList.add('is-revealed');
     });
 
     $$('[data-parallax]').forEach((el) => {
@@ -864,7 +866,10 @@
       tl.to(parts, { yPercent: 0, rotate: 0, duration: anim.duration, ease: anim.ease, stagger: anim.stagger }, i === 0 ? 0.05 : '-=0.7');
     });
     const intro = $$('[data-intro-fade]');
-    if (intro.length) tl.fromTo(intro, { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, stagger: 0.1, clearProps: 'transform' }, 0.35);
+    if (intro.length) {
+      tl.fromTo(intro, { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, stagger: 0.1, clearProps: 'transform' }, 0.35);
+      intro.forEach((el) => el.classList.add('is-revealed'));
+    }
 
     const heroCans = $$('.hero__can .png-slot');
     if (heroCans.length) tl.from(heroCans, { y: 360, rotation: () => gsap.utils.random(-30, 30), opacity: 0, duration: 1.4, ease: 'back.out(1.25)', stagger: { each: 0.09, from: 'center' } }, 0.2);

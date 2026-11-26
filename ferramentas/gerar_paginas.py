@@ -55,7 +55,7 @@ def can(f, section, label=True, extra_cls=''):
     lab = f'<span class="png-slot__label" aria-hidden="true">{file}<br>800×1600 px</span>' if label else ''
     return (f'<div class="png-slot can-slot {extra_cls}" style="--ar:1 / 2" data-img="assets/img/{file}" role="img" aria-label="Lata de FRIZZA {esc(f["name"])}">'
             f'<div class="can{light}" style="--can:{f["color"]}" aria-hidden="true"><div class="can__body"><div class="can__label">'
-            f'<span class="can__brand">FRIZZA</span><span class="can__flavor">{f["short"]}</span></div></div></div>{lab}</div>')
+            f'<img class="can__logo" src="assets/img/{"logo-frizza.png" if f.get("can_light") else "logo-frizza-branco.png"}" alt="" loading="lazy" decoding="async"><span class="can__flavor">{f["short"]}</span></div></div></div>{lab}</div>')
 
 FRUITS = {
     'fruta-laranja-fatia.png': ('Fatia de laranja bahia suculenta', '#FF9A3C', 'Fatia redonda de laranja bahia, bem suculenta, com gotas de água, vista de cima, PNG com fundo transparente.'),
@@ -102,11 +102,11 @@ def seal(uid, ring_text, mid, sub, bg, fg, label, mid_size=34):
             f'<circle cx="100" cy="100" r="97" fill="{bg}"/>'
             f'<circle cx="100" cy="100" r="62" fill="none" stroke="{fg}" stroke-width="1.5" stroke-dasharray="2 5"/>'
             f'<g class="seal__ring"><path id="seal-{uid}" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0" fill="none"/>'
-            f'<text fill="{fg}" font-family="Baloo 2, Fredoka, sans-serif" font-weight="800" font-size="15" letter-spacing="2">'
+            f'<text fill="{fg}" font-family="Fredoka, sans-serif" font-weight="700" font-size="15" letter-spacing="2">'
             f'<textPath href="#seal-{uid}" textLength="480" lengthAdjust="spacing">{ring_text}</textPath></text></g>'
             f'<path d="M100 52 l3.5 7 7.7 1.1-5.6 5.4 1.3 7.7-6.9-3.6-6.9 3.6 1.3-7.7-5.6-5.4 7.7-1.1z" fill="{fg}"/>'
             f'<text x="100" y="{112 if mid_size>30 else 108}" text-anchor="middle" fill="{fg}" font-family="Fredoka, sans-serif" font-weight="700" font-size="{mid_size}">{mid}</text>'
-            f'<text x="100" y="134" text-anchor="middle" fill="{fg}" font-family="Poppins, sans-serif" font-weight="600" font-size="12">{sub}</text>'
+            f'<text x="100" y="134" text-anchor="middle" fill="{fg}" font-family="Poppins, sans-serif" font-weight="700" font-size="12">{sub}</text>'
             f'</svg></div>')
 
 SEALS = [
@@ -252,8 +252,7 @@ def logo_slot(file, extra=''):
     return f'<span class="logo-slot {extra}" data-img="assets/img/{file}" data-alt="FRIZZA">{logo_word()}</span>'
 
 def head(title, desc, theme_color, serif=False):
-    fonts = 'family=Baloo+2:wght@700;800&family=Fredoka:wght@600;700&family=Poppins:wght@400;500;600'
-    if serif: fonts += '&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500'
+    fonts = 'family=Fredoka:wght@500;600;700&family=Poppins:ital,wght@0,400;0,700;1,400'
     register('og-frizza.jpg', 1200, 630, 'FRIZZA Refrigerantes', 'Imagem de compartilhamento (Open Graph): as 5 latas FRIZZA lado a lado sobre fundo em gradiente tropical laranja e amarelo, com frutas e gotas, e o logo. Usada quando o link é compartilhado em redes sociais e WhatsApp.', 'meta Open Graph (todas as páginas)', 'foto', once=True)
     register('favicon.png', 512, 512, 'Ícone FRIZZA', 'Favicon / ícone de app: símbolo da FRIZZA (letra F com bolha) sobre fundo laranja-amarelo, quadrado, PNG. Enquanto não existir, o site usa assets/icons/favicon.svg.', 'favicon (todas as páginas)', 'png', once=True)
     return f'''<!doctype html>
@@ -292,9 +291,9 @@ def preloader():
     import random
     random.seed(7)
     bub = ''.join(f'<span style="left:{random.randint(2,96)}%;width:{(s:=random.randint(10,46))}px;height:{s}px;animation-duration:{random.uniform(2.4,5.5):.2f}s;animation-delay:-{random.uniform(0,5):.2f}s;--dx:{random.randint(-40,40)}px"></span>' for _ in range(22))
-    letters = '<span class="pl-letter">F</span><span class="pl-letter">R</span><span class="pl-letter logo-i">I<span class="logo-bubble"></span></span><span class="pl-letter">Z</span><span class="pl-letter">Z</span><span class="pl-letter">A</span>'
+    letters = '<img class="preloader__img" src="assets/img/logo-frizza.png" alt="" width="796" height="429">'
     return (f'<div class="preloader" aria-hidden="true"><div class="preloader__bubbles">{bub}</div>'
-            f'<div class="preloader__logo"><span class="logo-word">{letters}</span></div>'
+            f'<div class="preloader__logo">{letters}</div>'
             f'<p class="preloader__text">Efervescendo…</p></div>')
 
 def page_transition():
@@ -382,7 +381,7 @@ def footer():
       <p class="disclaimer">Marca fictícia criada para fins acadêmicos — Design de Interface, Publicidade e Propaganda, Unoeste.</p>
     </div>
   </div>
-  <p class="footer-big" aria-hidden="true">FRIZZA</p>
+  <div class="footer-big" aria-hidden="true"><img src="assets/img/logo-frizza-branco.png" alt="" loading="lazy"></div>
 </footer>'''
 
 PAGES = []
@@ -438,7 +437,6 @@ for f in FLAVORS:
     vit_panels += f'''<article class="vitrine__panel" data-color="{f["color"]}" data-fg="{f["fg"]}" aria-labelledby="vit-{f["slug"]}">
   <div class="vitrine__visual"><span class="vitrine__ring" aria-hidden="true"></span><div class="vitrine__can">{can(f, "Vitrine dos 5 sabores (scroll horizontal)")}</div></div>
   <div class="vitrine__info">
-    <span class="vitrine__num" aria-hidden="true">{f["num"]}</span>
     <p class="eyebrow">{f["badge"]}</p>
     <h3 id="vit-{f["slug"]}">{f["name"]}</h3>
     <p class="slogan">“{f["slogan"]}”</p>
@@ -477,8 +475,8 @@ home = f'''
   {bubbles_canvas(40)}
   <div class="container hero__inner">
     <div class="hero__copy">
-      <p class="eyebrow" data-intro-fade style="color:var(--preto-suave)">Refrigerantes artesanais · Gramado, RS</p>
-      <h1 class="hero__title" id="hero-title"><span class="line" data-split="chars" data-intro>Sabor de verdade.</span> <span class="line line--2" data-split="chars" data-intro>Feito de verdade.</span></h1>
+      <p class="eyebrow" data-intro-fade style="color:var(--preto-suave)">Refrigerantes artesanais</p>
+      <h1 class="hero__title" id="hero-title"><span class="line" data-split="chars" data-intro>Seu paladar merece</span> <span class="line line--2" data-split="chars" data-intro>esse upgrade</span></h1>
       <p class="hero__sub" data-intro-fade>Refrigerantes artesanais com frutas brasileiras de verdade, até 40% menos açúcar e nenhum ingrediente que você não sabe pronunciar.</p>
       <div class="btn-row" data-intro-fade>{btn("Conheça os sabores", "sabores.html", "primary", ic="arrow", size="btn--lg")}{btn("Onde comprar", "onde-encontrar.html", "white", ic="pin", size="btn--lg", ic_first=True)}</div>
     </div>
@@ -495,8 +493,8 @@ home = f'''
 <section class="section manifesto" id="manifesto" aria-labelledby="manifesto-title">
   <div class="manifesto__deco float" aria-hidden="true">{fruit("folha-tropical.png", "Manifesto (decoração)", label=False)}</div>
   <div class="container container--narrow">
-    <h2 class="eyebrow" id="manifesto-title">Manifesto FRIZZA</h2>
-    <p class="manifesto__text" data-manifesto>Seu paladar merecia esse upgrade. A gente pega <span class="accent-1">fruta brasileira de verdade</span>, de pequenos produtores, junta com gás na medida e <span class="accent-2">menos açúcar</span>. Sem corante artificial, sem conservante, sem enrolação. <span class="accent-3">Natural de verdade. Gostoso de verdade.</span> Simples assim.</p>
+    <h2 class="sr-only" id="manifesto-title">Manifesto FRIZZA</h2>
+    <p class="manifesto__text" data-manifesto>A FRIZZA nasceu do sonho de criar um refrigerante que representa o <span class="accent-1">sabor brasileiro</span> e valoriza o <span class="accent-2">pequeno produtor</span>. A gente pega <span class="accent-1">fruta brasileira de verdade</span>, de pequenos produtores, junta com gás na medida e <span class="accent-2">menos açúcar</span>. Sem corante artificial, sem conservante, sem enrolação. <span class="accent-3">Natural de verdade. Gostoso de verdade.</span> Simples assim.</p>
     <div class="manifesto__sign" data-reveal>{btn("Conheça nossa história", "historia.html", "mint", ic="arrow")}<span class="muted">Desde 2018, em Gramado (RS) 🫧</span></div>
   </div>
 </section>
@@ -505,7 +503,6 @@ home = f'''
   <div class="vitrine__pin">
     <div class="container vitrine__head">
       <div><p class="eyebrow">Nossos sabores</p><h2 id="vitrine-title">Cada garrafa, uma<br>mini viagem pelo Brasil</h2></div>
-      <p class="vitrine__count" aria-hidden="true">01 / 05</p>
     </div>
     <div class="vitrine__track" tabindex="0" role="region" aria-label="Vitrine dos 5 sabores (role para ver todos)">{vit_panels}</div>
     <div class="vitrine__dots" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
@@ -513,18 +510,18 @@ home = f'''
 </section>
 
 <section class="rose-banner section" aria-labelledby="rose-title">
-  {bubbles_canvas(90, mode="sparkle")}
+  {bubbles_canvas(90, color="255, 222, 236", mode="sparkle")}
   <div class="container rose-banner__grid">
     <div>
-      <p class="premium-eyebrow">Edição Limitada · Serra Gaúcha</p>
-      <h2 class="premium-title" id="rose-title" data-reveal>Para brindar <em>sem precisar de motivo</em></h2>
+      <p class="eyebrow">Edição Limitada · Serra Gaúcha</p>
+      <h2 class="premium-title" id="rose-title" data-reveal>Para brindar <span class="accent">sem precisar de motivo</span></h2>
       <p class="premium-text" data-reveal>A nova FRIZZA Uva Rosé nasce da parceria com vinícolas de Bento Gonçalves: uva rosé orgânica, um sopro de água de rosas e bolhas finas e persistentes, estilo espumante. Sem álcool, cheia de celebração.</p>
-      <div class="btn-row" style="margin-top:34px" data-reveal>{btn("Descobrir a Uva Rosé", "sabor-uva-rose.html", "gold", ic="arrow")}{btn("Onde comprar", "onde-encontrar.html", "gold-ghost")}</div>
+      <div class="btn-row" style="margin-top:34px" data-reveal>{btn("Descobrir a Uva Rosé", "sabor-uva-rose.html", "yellow", ic="arrow")}{btn("Onde comprar", "onde-encontrar.html", "ghost", ic="pin", ic_first=True)}</div>
     </div>
     <div class="rose-banner__visual">
       <span class="rose-banner__halo" aria-hidden="true"></span>
       <div class="float" data-parallax="0.15">{can(uva, "Banner especial Uva Rosé")}</div>
-      {seal("rose-home", "EDIÇÃO LIMITADA • SERRA GAÚCHA • SAFRA 2026 •", "Rosé", "Safra 2026", "#2A1420", "#D9B77E", "Selo Edição Limitada, Serra Gaúcha", 34)}
+      {seal("rose-home", "EDIÇÃO LIMITADA • SERRA GAÚCHA • SAFRA 2026 •", "Rosé", "Safra 2026", "#FFD23F", "#1A1A2E", "Selo Edição Limitada, Serra Gaúcha", 34)}
     </div>
   </div>
 </section>
@@ -584,7 +581,7 @@ home = f'''
   </div>
 </section>
 '''
-page('index.html', 'FRIZZA Refrigerantes | Sabor de verdade. Feito de verdade.',
+page('index.html', 'FRIZZA Refrigerantes | Seu paladar merece esse upgrade',
      'Refrigerantes artesanais com frutas brasileiras de verdade, menos açúcar e ingredientes naturais. Conheça os 5 sabores FRIZZA, feitos em Gramado (RS).',
      home, 'index.html', serif=True)
 
@@ -684,7 +681,7 @@ def flavor_page(f):
     sens = ''
     for k, (ic, title, text, mlabel, lvl) in enumerate(f['sensory']):
         meter = ''.join(f'<i class="{"on" if j < lvl else ""}"></i>' for j in range(5))
-        sens += (f'<li class="sensory__card"><span class="sensory__num" aria-hidden="true">0{k+1}</span><div class="sensory__icon" aria-hidden="true">{ICONS[ic]}</div>'
+        sens += (f'<li class="sensory__card"><div class="sensory__icon" aria-hidden="true">{ICONS[ic]}</div>'
                  f'<h3>{title}</h3><p>{text}</p><div class="meter" role="img" aria-label="{mlabel}: {lvl} de 5">{meter}<span>{mlabel}</span></div></li>')
     bars = ''
     for name, pct, illus in f['ingredients']:
@@ -702,10 +699,10 @@ def flavor_page(f):
     hl_num, hl_text = f['highlight']
     big_strip = (f'<div class="premium-strip" aria-hidden="true">Edição limitada · Safra 2026 · <span>Serra Gaúcha</span> · Embalagem colecionável</div>' if premium else
                  marquee([f['slogan'], f'FRIZZA {f["name"]}', *[t for _, t in f['facts']]], 'marquee--yellow' if f['slug'] != 'acai-guarana' else ''))
-    rose_grad = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="rose-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8A0BF"/><stop offset="1" stop-color="#D9B77E"/></linearGradient></defs></svg>' if premium else ''
-    hero_bubbles = bubbles_canvas(100, mode='sparkle') if premium else bubbles_canvas(36)
-    hero_btn2 = btn("Ver ingredientes", "#ingredientes", "gold-ghost" if premium else "ghost")
-    hero_btn1 = btn("Onde comprar", "onde-encontrar.html", "gold" if premium else ("yellow" if f['slug'] == 'acai-guarana' else "dark"), ic="pin", ic_first=True)
+    rose_grad = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="rose-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8A0BF"/><stop offset="1" stop-color="#7B2D8E"/></linearGradient></defs></svg>' if premium else ''
+    hero_bubbles = bubbles_canvas(100, color="255, 222, 236", mode="sparkle") if premium else bubbles_canvas(36)
+    hero_btn2 = btn("Ver ingredientes", "#ingredientes", "ghost")
+    hero_btn1 = btn("Onde comprar", "onde-encontrar.html", "yellow" if f.get('header_light') else "dark", ic="pin", ic_first=True)
     wave_after_hero = '#FCF6F8' if premium else '#FAFAFA'
     main = f'''
 <section class="flavor-hero" aria-labelledby="fl-title">
@@ -713,8 +710,8 @@ def flavor_page(f):
   <span class="flavor-hero__big" aria-hidden="true">{f["big"]}</span>
   <div class="container flavor-hero__grid">
     <div style="position:relative;z-index:3">
-      <p class="eyebrow" data-intro-fade>Sabor {f["num"]} · {f["badge"]}</p>
-      <h1 class="flavor-hero__name" id="fl-title"><small data-intro-fade>FRIZZA</small><span data-split="chars" data-intro>{f["name"]}</span></h1>
+      <p class="eyebrow" data-intro-fade>{f["badge"]}</p>
+      <h1 class="flavor-hero__name" id="fl-title"><img class="flavor-hero__logo" data-intro-fade src="assets/img/{"logo-frizza-branco.png" if f.get("header_light") else "logo-frizza.png"}" alt="FRIZZA" width="796" height="429"> <span data-split="chars" data-intro>{f["name"]}</span></h1>
       <p class="flavor-hero__slogan" data-intro-fade>“{f["slogan"]}”</p>
       <p class="flavor-hero__desc" data-intro-fade>{f["desc"]}</p>
       <div class="btn-row" data-intro-fade>{hero_btn1}{hero_btn2}</div>
@@ -802,7 +799,7 @@ def flavor_page(f):
     if premium: body += ' class="theme-premium"'
     page(fn, f'FRIZZA {full} | {f["slogan"]}',
          f'FRIZZA {full}: {f["desc"][:120].rsplit(" ", 1)[0]}… Ingredientes, informação nutricional e onde comprar.',
-         main, 'sabores.html', theme_color=('#2A1420' if premium else f['color']), body_attrs=body, serif=bool(premium))
+         main, 'sabores.html', theme_color=('#7B2D8E' if premium else f['color']), body_attrs=body, serif=bool(premium))
 
 for f in FLAVORS:
     flavor_page(f)
@@ -1118,7 +1115,6 @@ lovers = f'''
     <div class="lightbox__info">
       <b>{icon("instagram")}<span class="lightbox__user"></span></b>
       <p class="lightbox__caption"></p>
-      <p class="small lightbox__count" style="margin-top:10px;opacity:.7"></p>
       <div class="lightbox__nav">
         <button class="lightbox__btn lightbox__btn--prev" type="button" aria-label="Foto anterior">{icon("arrow")}</button>
         <button class="lightbox__btn lightbox__btn--next" type="button" aria-label="Próxima foto">{icon("arrow")}</button>
