@@ -1543,3 +1543,73 @@ table { border-collapse: collapse; }
 .co-summary__total { padding-top: 10px; border-top: 2px solid var(--preto-suave); font-size: 1.1rem; }
 .co-summary__total dd { font-family: var(--font-display); font-size: 1.7rem; }
 .co-summary__edit { justify-self: start; }
+
+/* =====================================================================
+   22. IMAGENS REAIS (fotos dos designers)
+   ===================================================================== */
+.img-slot.has-img { background: var(--cinza-100); }
+.img-slot img { transition: opacity .6s, scale 1s var(--ease-out); }
+.img-slot.is-parallax img { top: -8%; bottom: auto; height: 116%; }
+
+/* Latas: fotos sem fundo transparente viram "card" de produto */
+.png-slot.is-photo img {
+  filter: none; object-fit: cover; object-position: 50% 50%;
+  border-radius: 22% / 11%; background: #F2F3F5;
+  box-shadow: 0 22px 34px -14px rgba(26, 26, 46, .45), 0 0 0 3px rgba(255, 255, 255, .7);
+}
+.png-slot.is-svg img { object-fit: contain; filter: drop-shadow(0 10px 12px rgba(26, 26, 46, .25)); }
+.product-card .can-slot.is-photo img { transition: scale .6s var(--ease-out); }
+.product-card:hover .can-slot.is-photo img { scale: 1.04; }
+
+/* Molduras de foto */
+.photo-frame { border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
+.vitrine__visual .img-slot { height: 100%; width: auto; max-width: 100%; border: 6px solid rgba(255, 255, 255, .55); }
+.vitrine__ring { display: none; }
+.rose-banner__photo { width: clamp(240px, 26vw, 360px); position: relative; z-index: 2; }
+.rose-banner__photo .img-slot { border-radius: var(--radius-lg); box-shadow: 0 30px 70px -20px rgba(0, 0, 0, .6), 0 0 0 1px rgba(255, 210, 63, .35), 0 0 60px -10px rgba(255, 210, 63, .35); }
+.flavor-hero__photo { height: auto; aspect-ratio: auto; width: min(420px, 78%); }
+.flavor-hero__photo .img-slot { border: 6px solid rgba(255, 255, 255, .6); }
+.quiz-result__can .img-slot { width: 90px; border-radius: 20px; box-shadow: var(--shadow-sm); }
+.story-preview__media .img-slot, .occasion .img-slot { box-shadow: var(--shadow); }
+
+/* Zoom suave no hover */
+.feed__item:hover .img-slot img, .masonry__btn:hover .img-slot img, .event:hover .img-slot img, .sust__card:hover .img-slot img,
+.premium-band__item:hover .img-slot img, .origin:hover .origin__img:not(.origin__img--svg) { scale: 1.07; }
+.feed__item .img-slot, .masonry__btn .img-slot, .event .img-slot { overflow: hidden; }
+
+/* Origem dos sabores com miniatura */
+.origin__thumb { position: relative; width: 64px; height: 64px; flex: none; }
+.origin__img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 3px solid var(--o-c); transition: scale .5s var(--ease-out); background: #fff; }
+.origin__img--svg { object-fit: contain; padding: 8px; }
+.origin__thumb .origin__dot { position: absolute; right: -2px; bottom: -2px; width: 18px; height: 18px; border: 3px solid #fff; }
+
+/* Cards de sustentabilidade com foto */
+.sust__card { overflow: hidden; }
+.sust__img { margin: -30px -30px 22px; border-radius: 0; }
+
+/* Faixa premium (Uva Rosé) */
+.premium-band__grid { display: grid; gap: 22px; }
+@media (min-width: 760px) { .premium-band__grid { grid-template-columns: 1fr 1fr; } }
+.premium-band__item { position: relative; margin: 0; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow); }
+.premium-band__item .img-slot { border-radius: 0; --ar: 4 / 3 !important; }
+.premium-band__item figcaption {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 60px 24px 22px;
+  background: linear-gradient(transparent, rgba(26, 26, 46, .85)); color: #fff;
+  font-family: var(--font-display); font-weight: 700; font-size: 1.35rem;
+}
+
+/* Hero de Onde Encontrar com foto */
+.onde-hero .img-slot { border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); border: 6px solid rgba(255, 255, 255, .5); }
+
+/* Hero da Home: gelo e folha extras */
+.hero__fruit--7 { left: 44%; bottom: 2%; width: clamp(36px, 4vw, 64px); z-index: 6; }
+.hero__fruit--8 { right: 0; bottom: 40%; width: clamp(40px, 5vw, 80px); z-index: 0; }
+@media (max-width: 599px) { .hero__fruit--8 { display: none; } }
+.vitrine__visual .img-slot { height: clamp(260px, 52vh, 560px); width: auto; }
+@media (max-width: 859px) { .vitrine__visual .img-slot { height: 34vh; min-height: 220px; } }
+@media (max-width: 600px) { .vitrine__visual .img-slot { height: 30vh; min-height: 190px; } }
+@media (hover: none) and (max-width: 699px) {
+  .masonry__meta { padding: 28px 10px 10px; }
+  .masonry__meta span { display: none; }
+  .masonry__meta b { font-size: .8rem; }
+}

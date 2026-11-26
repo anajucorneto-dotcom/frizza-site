@@ -34,28 +34,62 @@ def register(file, w, h, alt, desc, section, kind, once=False):
     if use not in item['uses']:
         item['uses'].append(use)
 
-def slot(file, w, h, alt, desc, section, cls='', color=None, style='', reveal=None):
+IMG_DIR = os.path.join(ROOT, 'assets/img')
+_dims = {}
+def img_exists(rel): return os.path.exists(os.path.join(IMG_DIR, rel))
+def img_dims(rel):
+    if rel not in _dims:
+        if rel.endswith('.svg'):
+            m = re.search(r'viewBox="0 0 ([\d.]+) ([\d.]+)"', open(os.path.join(IMG_DIR, rel)).read())
+            _dims[rel] = (int(float(m.group(1))), int(float(m.group(2)))) if m else (120, 120)
+        else:
+            from PIL import Image as _I
+            _dims[rel] = _I.open(os.path.join(IMG_DIR, rel)).size
+    return _dims[rel]
+
+def img_tag(rel, alt, cls='', pos=None, eager=False, high=False, decorative=False):
+    w, h = img_dims(rel)
+    a = ' alt="" aria-hidden="true"' if decorative else f' alt="{esc(alt)}"'
+    st = f' style="object-position:{pos}"' if pos else ''
+    ld = (' fetchpriority="high"' if high else '') if eager else ' loading="lazy"'
+    c = f' class="{cls}"' if cls else ''
+    return f'<img src="assets/img/{rel}"{a}{c} width="{w}" height="{h}" decoding="async"{ld}{st}>'
+
+def slot(file, w, h, alt, desc, section, cls='', color=None, style='', reveal=None, pos=None, eager=False, high=False, parallax=False, decorative=False):
     register(file, w, h, alt, desc, section, 'foto')
     st = f'--ar:{ratio(w, h)};'
     if color: st += f'--slot-c:{color};'
     st += style
     rv = f' data-reveal="{reveal}"' if reveal else ''
-    return (f'<div class="img-slot {cls}" style="{st}" data-img="assets/img/{file}" role="img" aria-label="{esc(alt)}"{rv}>'
+    if img_exists(file):
+        par = ' is-parallax' if parallax else ''
+        return (f'<div class="img-slot has-img is-loaded{par} {cls}" style="{st}"{rv}>'
+                f'{img_tag(file, alt, pos=pos, eager=eager, high=high, decorative=decorative)}</div>')
+    return (f'<div class="img-slot {cls}" style="{st}" data-img-pendente="assets/img/{file}" role="img" aria-label="{esc(alt)}"{rv}>'
             f'<div class="img-slot__ph" aria-hidden="true">{icon("image")}'
             f'<span class="img-slot__label">{file}<br>{w}×{h} px</span></div></div>')
 
-def can(f, section, label=True, extra_cls=''):
-    file = f'lata-{f["slug"]}.png'
+def can(f, section, label=True, extra_cls='', variant='', eager=False, high=False):
+    file = f'latas/lata-{f["slug"]}{variant}.webp'
     register(file, 800, 1600, f'Lata de FRIZZA {f["name"]}',
-             f'Lata de 350 ml da FRIZZA {f["name"]} em PNG com fundo transparente, de frente, levemente '
-             f'na diagonal, com gotas de condensação geladas, rótulo na cor {f["color"]}. Luz de estúdio suave, '
-             f'sombra NÃO incluída (o site aplica sombra). Recorte limpo para flutuar e girar nas animações.',
+             f'Lata de 350 ml da FRIZZA {f["name"]} de frente, com gotas de condensação, rótulo na cor {f["color"]}. '
+             f'Ideal: PNG com fundo transparente (recorte limpo, sem sombra) para flutuar e girar nas animações.',
              section, 'png')
+    if img_exists(file):
+        return (f'<div class="png-slot can-slot is-photo is-loaded {extra_cls}" style="--ar:1 / 2">'
+                f'{img_tag(file, f"Lata de FRIZZA {f[chr(110)+chr(97)+chr(109)+chr(101)]}", eager=eager, high=high)}</div>')
     light = ' can--light' if f.get('can_light') else ''
     lab = f'<span class="png-slot__label" aria-hidden="true">{file}<br>800×1600 px</span>' if label else ''
     return (f'<div class="png-slot can-slot {extra_cls}" style="--ar:1 / 2" data-img="assets/img/{file}" role="img" aria-label="Lata de FRIZZA {esc(f["name"])}">'
             f'<div class="can{light}" style="--can:{f["color"]}" aria-hidden="true"><div class="can__body"><div class="can__label">'
-            f'<img class="can__logo" src="assets/img/{"logo-frizza.png" if f.get("can_light") else "logo-frizza-branco.png"}" alt="" loading="lazy" decoding="async"><span class="can__flavor">{f["short"]}</span></div></div></div>{lab}</div>')
+            f'<img class="can__logo" src="assets/img/marca/{"logo-frizza.png" if f.get("can_light") else "logo-frizza-branco.png"}" alt="" loading="lazy" decoding="async"><span class="can__flavor">{f["short"]}</span></div></div></div>{lab}</div>')
+
+def destaque(f, section, cls='', eager=False, high=False, ar='4 / 5', pos='86% 50%'):
+    """Foto 'lata + frutas' do sabor."""
+    rel = f'sabores/{f["slug"]}-destaque.webp'
+    register(rel, 1376, 768, f'Lata de FRIZZA {f["name"]} cercada de frutas e respingos', f'Lata da FRIZZA {f["name"]} com as frutas do sabor, respingos e gelo sobre fundo na cor do sabor.', section, 'foto')
+    return (f'<div class="img-slot has-img is-loaded photo-frame {cls}" style="--ar:{ar}">'
+            f'{img_tag(rel, f"Lata de FRIZZA {f[chr(110)+chr(97)+chr(109)+chr(101)]} cercada das frutas do sabor, com respingos e gelo", pos=pos, eager=eager, high=high)}</div>')
 
 FRUITS = {
     'fruta-laranja-fatia.png': ('Fatia de laranja bahia suculenta', '#FF9A3C', 'Fatia redonda de laranja bahia, bem suculenta, com gotas de água, vista de cima, PNG com fundo transparente.'),
@@ -70,16 +104,19 @@ FRUITS = {
     'petala-rosa.png': ('Pétalas de rosa', '#F3B8CF', 'Três pétalas de rosa cor-de-rosa clarinho, delicadas, PNG com fundo transparente.'),
     'folha-videira.png': ('Folha de videira', None, 'Folha de videira verde com nervuras visíveis, PNG com fundo transparente.'),
     'folha-tropical.png': ('Folha tropical', None, 'Folha tropical (costela-de-adão ou palmeira) verde vibrante, PNG com fundo transparente.'),
+    'gelo.png': ('Cubo de gelo', '#DFF6FF', 'Cubo de gelo.'),
 }
 
-def fruit(file, section, label=True):
+def fruit(file, section, label=True, eager=False):
+    """Elemento solto decorativo (SVG em assets/img/elementos/)."""
+    rel = 'elementos/' + file.replace('.png', '.svg')
     alt, color, desc = FRUITS[file]
+    if img_exists(rel):
+        register(rel, 120, 120, '(decorativo)', f'Ilustração SVG: {alt.lower()}', section, 'svg')
+        return f'<div class="png-slot fruit is-svg is-loaded" style="--ar:1 / 1">{img_tag(rel, "", eager=eager, decorative=True)}</div>'
     register(file, 600, 600, alt, desc, section, 'png')
-    leaf = color is None
     st = '--ar:1 / 1;' + (f'--fruit:{color};' if color else '')
-    lab = f'<span class="png-slot__label" aria-hidden="true">{file}<br>600×600 px</span>' if label else ''
-    return (f'<div class="png-slot fruit{" fruit--leaf" if leaf else ""}" style="{st}" data-img="assets/img/{file}" role="img" aria-label="{esc(alt)}">'
-            f'<span class="png-slot__shape" aria-hidden="true"></span>{lab}</div>')
+    return f'<div class="png-slot fruit" style="{st}" aria-hidden="true"><span class="png-slot__shape"></span></div>'
 
 def btn(text, href, variant='primary', ic=None, size='', attrs='', magnetic=True, ic_first=False):
     mg = ' data-magnetic' if magnetic else ''
@@ -231,7 +268,7 @@ for _f in FLAVORS: _f['price'] = PRICES[_f['slug']]
 def brl(v): return 'R$ ' + f'{v:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.')
 def cart_attrs(f):
     return (f'data-add-cart data-id="{f["slug"]}" data-name="FRIZZA {esc(f["name"])}" data-price="{f["price"]:.2f}" '
-            f'data-color="{f["color"]}" data-img="assets/img/lata-{f["slug"]}.png" data-url="sabor-{f["slug"]}.html"')
+            f'data-color="{f["color"]}" data-cart-img="assets/img/latas/lata-{f["slug"]}.webp" data-url="sabor-{f["slug"]}.html"')
 def cart_btn(f, variant='primary', size='', label='Adicionar ao carrinho', magnetic=True):
     mg = ' data-magnetic' if magnetic else ''
     return (f'<button class="btn btn--{variant} {size}" type="button" {cart_attrs(f)}{mg} aria-label="Adicionar FRIZZA {esc(f["name"])} ao carrinho, {brl(f["price"])}">'
@@ -258,14 +295,14 @@ def logo_word():
     return '<span class="logo-word" aria-hidden="true">FR<span class="logo-i">I<span class="logo-bubble"></span></span>ZZA</span>'
 
 def logo_slot(file, extra=''):
-    register(file, 600, 200, 'Logotipo FRIZZA', 'Logotipo FRIZZA ' + ('em versão branca (para fundos escuros, footer)' if 'branco' in file else 'em versão colorida (para fundos claros)') +
-             ', PNG com fundo transparente. O pingo do "i" é uma pequena bolha de gás.', 'header e footer (todas as páginas)', 'png', once=True)
-    return f'<span class="logo-slot {extra}" data-img="assets/img/{file}" data-alt="FRIZZA">{logo_word()}</span>'
+    rel = 'marca/' + file
+    register(rel, 796, 429, 'Logotipo FRIZZA', 'Logotipo FRIZZA (PNG transparente).', 'header e footer (todas as páginas)', 'png', once=True)
+    return f'<span class="logo-slot is-loaded {extra}">{img_tag(rel, "", eager=True, decorative=True)}</span>'
 
 def head(title, desc, theme_color, serif=False):
     fonts = 'family=Fredoka:wght@500;600;700&family=Poppins:ital,wght@0,400;0,700;1,400'
-    register('og-frizza.jpg', 1200, 630, 'FRIZZA Refrigerantes', 'Imagem de compartilhamento (Open Graph): as 5 latas FRIZZA lado a lado sobre fundo em gradiente tropical laranja e amarelo, com frutas e gotas, e o logo. Usada quando o link é compartilhado em redes sociais e WhatsApp.', 'meta Open Graph (todas as páginas)', 'foto', once=True)
-    register('favicon.png', 512, 512, 'Ícone FRIZZA', 'Favicon / ícone de app: símbolo da FRIZZA (letra F com bolha) sobre fundo laranja-amarelo, quadrado, PNG. Enquanto não existir, o site usa assets/icons/favicon.svg.', 'favicon (todas as páginas)', 'png', once=True)
+    register('marca/og-frizza.jpg', 1200, 630, 'FRIZZA Refrigerantes', 'Imagem de compartilhamento (Open Graph): as 5 latas FRIZZA lado a lado sobre fundo em gradiente tropical laranja e amarelo, com frutas e gotas, e o logo. Usada quando o link é compartilhado em redes sociais e WhatsApp.', 'meta Open Graph (todas as páginas)', 'foto', once=True)
+    register('marca/favicon.png', 512, 512, 'Ícone FRIZZA', 'Favicon / ícone de app: símbolo da FRIZZA (letra F com bolha) sobre fundo laranja-amarelo, quadrado, PNG. Enquanto não existir, o site usa assets/icons/favicon.svg.', 'favicon (todas as páginas)', 'png', once=True)
     return f'''<!doctype html>
 <html lang="pt-BR">
 <head>
@@ -279,14 +316,17 @@ def head(title, desc, theme_color, serif=False):
 <meta property="og:site_name" content="FRIZZA Refrigerantes">
 <meta property="og:title" content="{esc(title)}">
 <meta property="og:description" content="{esc(desc)}">
-<meta property="og:image" content="assets/img/og-frizza.jpg">
+<meta property="og:image" content="assets/img/marca/og-frizza.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="assets/img/favicon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/marca/favicon-32.png">
+<link rel="icon" type="image/png" sizes="512x512" href="assets/img/marca/favicon.png">
+<link rel="apple-touch-icon" href="assets/img/marca/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?{fonts}&display=swap">
-<link rel="stylesheet" href="assets/css/style.css?v=4">
+<link rel="stylesheet" href="assets/css/style.css?v=6">
 <script>
 /* Antes de pintar: define modo de animação, preloader (1ª visita) e cortina de transição */
 (function(){{var d=document.documentElement,rm=window.matchMedia('(prefers-reduced-motion: reduce)').matches;d.classList.add('js');if(!rm)d.classList.add('js-motion');try{{var pt=sessionStorage.getItem('frizza-pt');if(pt&&!rm){{d.classList.add('pt-enter');d.style.setProperty('--pt-color',pt);}}if(!sessionStorage.getItem('frizza-visited')&&!rm&&!pt)d.classList.add('has-preloader');}}catch(e){{}}setTimeout(function(){{if(!window.__frizzaReady)d.classList.remove('js-motion','pt-enter','has-preloader');}},4500);}})();
@@ -295,14 +335,14 @@ def head(title, desc, theme_color, serif=False):
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/split-type@0.3.4/umd/index.min.js"></script>
-<script defer src="assets/js/main.js?v=4"></script>
+<script defer src="assets/js/main.js?v=6"></script>
 </head>'''
 
 def preloader():
     import random
     random.seed(7)
     bub = ''.join(f'<span style="left:{random.randint(2,96)}%;width:{(s:=random.randint(10,46))}px;height:{s}px;animation-duration:{random.uniform(2.4,5.5):.2f}s;animation-delay:-{random.uniform(0,5):.2f}s;--dx:{random.randint(-40,40)}px"></span>' for _ in range(22))
-    letters = '<img class="preloader__img" src="assets/img/logo-frizza.png" alt="" width="796" height="429">'
+    letters = '<img class="preloader__img" src="assets/img/marca/logo-frizza.png" alt="" width="796" height="429">'
     return (f'<div class="preloader" aria-hidden="true"><div class="preloader__bubbles">{bub}</div>'
             f'<div class="preloader__logo">{letters}</div>'
             f'<p class="preloader__text">Efervescendo…</p></div>')
@@ -412,7 +452,7 @@ def footer():
       <p class="disclaimer">Marca fictícia criada para fins acadêmicos — Design de Interface, Publicidade e Propaganda, Unoeste.</p>
     </div>
   </div>
-  <div class="footer-big" aria-hidden="true"><img src="assets/img/logo-frizza-branco.png" alt="" loading="lazy"></div>
+  <div class="footer-big" aria-hidden="true"><img src="assets/img/marca/logo-frizza-branco.png" alt="" width="796" height="429" loading="lazy" decoding="async"></div>
 </footer>'''
 
 PAGES = []
@@ -458,16 +498,16 @@ order = ['acai-guarana', 'limao-hortela', 'laranja-bahia', 'pessego-gengibre', '
 depths = [0.5, 0.8, 1.2, 0.8, 0.5]
 for i, (slug, dp) in enumerate(zip(order, depths)):
     fl = ['float', 'float--2', 'float--3', 'float--2', 'float'][i]
-    hero_cans += f'<div class="hero__can hero__can--{i+1}" data-depth="{dp}"><div class="float {fl}">{can(FMAP[slug], "Hero (composição dos 5 produtos)")}</div></div>'
-hero_fruits_files = ['fruta-laranja-fatia.png', 'fruta-uva-rose.png', 'folha-hortela.png', 'fruta-acai.png', 'fruta-pessego.png', 'fruta-limao-siciliano.png']
-hero_fruits = ''.join(f'<div class="hero__fruit hero__fruit--{i+1}" data-depth="{[1.8,1.6,2.2,2.4,1.4,1.7][i]}"><div class="float float--{[2,3,2,3,2,3][i]}">{fruit(f, "Hero (frutas flutuando)", label=(i in (0, 1, 4, 5)))}</div></div>' for i, f in enumerate(hero_fruits_files))
+    hero_cans += f'<div class="hero__can hero__can--{i+1}" data-depth="{dp}"><div class="float {fl}">{can(FMAP[slug], "Home → hero (5 latas flutuando)", eager=True, high=(i == 2))}</div></div>'
+hero_fruits_files = ['fruta-laranja-fatia.png', 'fruta-uva-rose.png', 'folha-hortela.png', 'fruta-acai.png', 'fruta-pessego.png', 'fruta-limao-siciliano.png', 'gelo.png', 'folha-tropical.png']
+hero_fruits = ''.join(f'<div class="hero__fruit hero__fruit--{i+1}" data-depth="{[1.8,1.6,2.2,2.4,1.4,1.7,2.6,1.2][i]}"><div class="float float--{[2,3,2,3,2,3,2,3][i]}">{fruit(f, "Home → hero (frutas, gelo e folhas)", eager=True)}</div></div>' for i, f in enumerate(hero_fruits_files))
 drops = ''.join(f'<span class="hero__drop" data-depth="{dp}" style="left:{l}%;top:{t}%"></span>' for l, t, dp in [(30, 20, 2.6), (68, 30, 2.2), (12, 55, 2.8), (88, 50, 2.4), (46, 8, 3)])
 
 vit_panels = ''
 for f in FLAVORS:
     tags = ''.join(f'<li class="tag">{icon(i)}{t}</li>' for i, t in f['facts'])
     vit_panels += f'''<article class="vitrine__panel" data-color="{f["color"]}" data-fg="{f["fg"]}" aria-labelledby="vit-{f["slug"]}">
-  <div class="vitrine__visual"><span class="vitrine__ring" aria-hidden="true"></span><div class="vitrine__can">{can(f, "Vitrine dos 5 sabores (scroll horizontal)")}</div></div>
+  <div class="vitrine__visual"><span class="vitrine__ring" aria-hidden="true"></span><div class="vitrine__can">{destaque(f, "Home → vitrine dos sabores", cls="vitrine__photo")}</div></div>
   <div class="vitrine__info">
     <p class="eyebrow">{f["badge"]}</p>
     <h3 id="vit-{f["slug"]}">{f["name"]}</h3>
@@ -482,23 +522,24 @@ for f in FLAVORS:
 feed_users = [('mari.desenha', 'Laranja Bahia no piquenique do Barigui ☀️'), ('lucas.barista', 'Açaí + guaraná pra aguentar o turno 💜'),
               ('cleo.profe', 'Brinde de fim de ano com a turma 🥂'), ('nathy.picnic', 'Pêssego com gengibre + tábua de queijos = amor'),
               ('rafa.trilhas', 'Limão com hortelã no topo da trilha 🌿'), ('bia.praia', 'Pôr do sol em Floripa com FRIZZA 🌅')]
-LOVERS = [
-    ('lovers-01.jpg', 1080, 1350, 'mari.desenha', 'Laranja Bahia no piquenique do Barigui, em Curitiba ☀️', 'Mulher de 26 anos, designer, em um piquenique no Parque Barigui (Curitiba) segurando uma lata laranja da FRIZZA Laranja Bahia, toalha colorida e frutas, luz natural da tarde, estilo foto de Instagram autêntica.'),
-    ('lovers-02.jpg', 1080, 1080, 'lucas.barista', 'Açaí + guaraná pra aguentar o turno no café 💜', 'Jovem barista de 23 anos em uma cafeteria descolada de Belo Horizonte, avental, sorrindo e segurando uma lata roxa da FRIZZA Açaí com Guaraná, luz natural da janela, foto estilo selfie de TikTok.'),
-    ('lovers-03.jpg', 1080, 1440, 'cleo.profe', 'Brinde de fim de ano com a turma da escola 🥂', 'Professora de 52 anos em Porto Alegre, sorridente, brindando com colegas numa confraternização ao ar livre num pátio arborizado, latas rosé da FRIZZA Uva Rosé, luz natural, clima afetuoso.'),
-    ('lovers-04.jpg', 1080, 1350, 'nathy.picnic', 'Pêssego com gengibre + tábua de queijos = amor', 'Flat lay de um piquenique sobre toalha de linho: tábua de queijos, pêssegos, flores e uma lata pêssego da FRIZZA Pêssego com Gengibre, luz natural, cores vivas.'),
-    ('lovers-05.jpg', 1080, 1080, 'rafa.trilhas', 'Limão com hortelã no topo da trilha 🌿', 'Homem jovem de mochila no alto de uma trilha com vista para montanhas verdes da Serra Gaúcha, segurando uma lata verde-água da FRIZZA Limão com Hortelã, céu azul.'),
-    ('lovers-06.jpg', 1080, 1920, 'bia.praia', 'Pôr do sol em Floripa com FRIZZA 🌅', 'Mulher negra jovem na praia em Florianópolis ao pôr do sol, cabelo ao vento, levantando uma lata laranja da FRIZZA, mar e céu dourado ao fundo.'),
-    ('lovers-07.jpg', 1080, 1350, 'theo.mixologia', 'Mocktail de limão com hortelã que eu inventei 🍹', 'Close de um mocktail em copo alto com gelo, rodelas de limão siciliano e hortelã, ao lado de uma lata da FRIZZA Limão com Hortelã, balcão de madeira em uma varanda, luz natural.'),
-    ('lovers-08.jpg', 1080, 1080, 'gabi.foodie', 'O calorzinho do gengibre no final é tudo 🔥', 'Mulher jovem experimentando a FRIZZA Pêssego com Gengibre num food truck park, expressão de surpresa feliz, luzes de festival ao fundo.'),
-    ('lovers-09.jpg', 1080, 1440, 'joao_nofestival', 'Hidratação oficial do festival 🎶', 'Grupo de amigos diversos em um festival de música ao ar livre, braços pra cima, latas coloridas da FRIZZA na mão, confete e luz do pôr do sol.'),
-    ('lovers-10.jpg', 1080, 1350, 'carol.serra', 'Uva Rosé com vista para os vinhedos 🍇', 'Mulher elegante sentada numa varanda de madeira com vista para vinhedos em Bento Gonçalves, segurando uma taça com bebida rosada e a lata da FRIZZA Uva Rosé ao lado, entardecer.'),
-    ('lovers-11.jpg', 1080, 1080, 'pedalandocomaju', 'Pausa do pedal com a FRIZZA mais refrescante 🚲', 'Ciclista sorridente parada numa ciclovia arborizada em São Paulo, bicicleta colorida, bebendo uma FRIZZA Limão com Hortelã, luz natural.'),
-    ('lovers-12.jpg', 1080, 1350, 'duda.e.amigos', 'Os 5 sabores, uma mesa, muita risada 🫧', 'Mesa de amigos diversos em um quintal com luzinhas penduradas, as cinco latas coloridas da FRIZZA no centro, risadas, comida brasileira, clima de fim de tarde.'),
+LOVERS = [  # (arquivo, largura, altura, usuário, legenda, alt, object-position)
+    ('comunidade/lovers-01.webp', 1200, 1200, 'mari.desenha', 'Laranja Bahia gelada pra começar o dia ☀️', 'Mulher de boné verde bebendo uma lata de FRIZZA Laranja Bahia', '50% 40%'),
+    ('comunidade/lovers-02.webp', 1200, 896, 'lucas.barista', 'Limão com Hortelã pra refrescar o turno 🌿', 'Rapaz de cabelo cacheado e óculos laranja segurando uma lata de FRIZZA Limão com Hortelã contra o céu azul', '50% 40%'),
+    ('comunidade/lovers-03.webp', 1121, 1403, 'bia.colecionadora', 'Coleção completa e o coração quentinho 💛', 'Mulher sorrindo de olhos fechados abraçando quatro latas FRIZZA sobre fundo rosa', '50% 30%'),
+    ('comunidade/lovers-04.webp', 1200, 800, 'nathy.picnic', 'Açaí com Guaraná no piquenique de domingo 💜', 'Mulher de cabelo crespo bebendo FRIZZA Açaí com Guaraná deitada numa toalha de piquenique', '55% 40%'),
+    ('comunidade/lovers-05.webp', 1122, 1402, 'rafa.no.sol', 'Equilibrando a FRIZZA no rolê 😎', 'Pessoa de boné laranja e óculos equilibrando uma lata de FRIZZA Limão com Hortelã na cabeça', '50% 35%'),
+    ('comunidade/lovers-06.webp', 1024, 1535, 'duda.e.amigos', 'A turma toda de canudinho e FRIZZA 🫧', 'Três amigos vistos de cima bebendo FRIZZA de canudinho na rua', '50% 35%'),
+    ('comunidade/lovers-07.webp', 1100, 1430, 'theo.praia', 'Laranja Bahia gelada no fim de tarde 🌅', 'Homem de óculos escuros bebendo FRIZZA Laranja Bahia sob o céu azul com nuvens', '50% 30%'),
+    ('comunidade/lovers-08.webp', 1085, 1450, 'gabi.foodie', 'Uva Rosé ou Limão? Fiquei com as duas 😝', 'Mulher fazendo careta divertida com duas latas FRIZZA na frente dos olhos', '50% 35%'),
+    ('comunidade/lovers-09.webp', 853, 1280, 'carol.serra', 'Abraço coletivo de sabores 🍇🍋🍊', 'Mãos segurando quatro latas FRIZZA junto ao corpo num gramado', '50% 45%'),
+    ('comunidade/lovers-10.webp', 1024, 1536, 'joao_nofestival', 'Açaí e limão pra dançar a noite toda 🎶', 'Dois amigos sorrindo com latas FRIZZA em frente a uma parede verde', '50% 35%'),
+    ('comunidade/lovers-11.webp', 1122, 1402, 'pedro.e.ju', 'Verão é isso: praia, sol e FRIZZA 🌊', 'Casal na praia brindando com latas FRIZZA sob o céu azul', '50% 35%'),
+    ('comunidade/lovers-12.webp', 1024, 1536, 'aninha.sp', 'Laranja Bahia na mão e sorriso no rosto 😮', 'Mulher de boné e óculos escuros mostrando uma lata de FRIZZA Laranja Bahia', '50% 35%'),
 ]
 feed = ''
-for (file, w, h, user, cap, d) in LOVERS[:6]:
-    feed += (f'<li class="feed__item">{slot(file, w, h, f"Foto de @{user}: {cap}", d, "#FRIZZALOVERS (feed)", style="--ar:1 / 1;")}'
+for k in [0, 3, 2, 1, 8, 10]:
+    (file, w, h, user, cap, d, pos) = LOVERS[k]
+    feed += (f'<li class="feed__item">{slot(file, w, h, d, d, "Home → #FRIZZALOVERS (feed)", style="--ar:1 / 1;", pos=pos)}'
              f'<a class="feed__overlay" href="frizzalovers.html" aria-label="Ver post de @{user} na galeria #FRIZZALOVERS">{icon("instagram")}<span>@{user}</span></a></li>')
 
 uva = FMAP['uva-rose']
@@ -553,7 +594,7 @@ home = f'''
     </div>
     <div class="rose-banner__visual">
       <span class="rose-banner__halo" aria-hidden="true"></span>
-      <div class="float" data-parallax="0.15">{can(uva, "Banner especial Uva Rosé")}</div>
+      <div class="float rose-banner__photo" data-parallax="0.15">{slot("sabores/uva-rose-premium.webp", 4, 5, "Lata de FRIZZA Uva Rosé sobre superfície escura com luz dourada, pétalas e bolhas", "", "Home → banner premium Uva Rosé", pos="88% 50%")}</div>
       {seal("rose-home", "EDIÇÃO LIMITADA • SERRA GAÚCHA • SAFRA 2026 •", "Rosé", "Safra 2026", "#FFD23F", "#1A1A2E", "Selo Edição Limitada, Serra Gaúcha", 34)}
     </div>
   </div>
@@ -587,7 +628,7 @@ home = f'''
 <section class="section story-preview" aria-labelledby="story-title">
   <div class="container grid-2">
     <div class="story-preview__media">
-      {slot("historia-fundadores.jpg", 1080, 1350, "Os dois fundadores da FRIZZA sorrindo na pequena fábrica em Gramado, cercados de garrafas e frutas", "Retrato espontâneo dos dois jovens fundadores da FRIZZA (um homem e uma mulher, cerca de 30 anos) rindo dentro da pequena fábrica artesanal em Gramado, bancada de madeira com garrafas de vidro, caixas de laranja e hortelã, luz natural entrando pela janela, cores quentes.", "Prévia da história", reveal="mask")}
+      {slot("historia/horta-hortela-gramado.webp", 1080, 1350, "Agricultora colhendo hortelã na horta da FRIZZA em Gramado, com araucárias e uma casa de madeira ao fundo", "", "Home → prévia da história", reveal="mask", pos="58% 50%", parallax=True)}
       <div class="story-preview__badge" aria-hidden="true"><span><b>2018</b><small>Gramado · RS</small></span></div>
     </div>
     <div class="stack">
@@ -607,7 +648,7 @@ page('index.html', 'FRIZZA Refrigerantes | Seu paladar merece esse upgrade',
 # =================================================================== SABORES
 set_page('sabores.html')
 cards = ''.join(product_card(f, 'Grid de cards') for f in FLAVORS)
-row = ''.join(f'<div class="float float--{(i%3)+1}" data-reveal="fade">{can(f, "Hero (as 5 latas)", label=True)}</div>' for i, f in enumerate(FLAVORS))
+row = ''.join(f'<div class="float float--{(i%3)+1}" data-reveal="fade">{can(f, "Nossos Sabores → hero (5 latas)", variant="-classica", eager=True, high=(i == 2))}</div>' for i, f in enumerate(FLAVORS))
 
 QUIZ = [
     ('Pra que momento é a sua FRIZZA?', 'sun', [
@@ -645,7 +686,7 @@ for qi, (q, ic, opts) in enumerate(QUIZ):
                    f'<legend class="quiz__q">{icon(ic)}<span>{q}</span></legend><ul class="quiz__opts" role="list">{options}</ul></fieldset>')
 quiz_products = ''.join(
     f'<template data-quiz-product="{f["slug"]}"><article class="quiz-result" data-theme="{f["slug"]}">'
-    f'<div class="quiz-result__can">{can(f, "Quiz (resultado)", label=False)}</div>'
+    f'<div class="quiz-result__can">{destaque(f, "Nossos Sabores → quiz (resultado)", ar="1 / 1", pos="94% 50%")}</div>'
     f'<div class="quiz-result__info"><p class="quiz-result__match"><span data-match></span> de combinação</p>'
     f'<h4>FRIZZA {f["name"]}</h4><p class="quiz-result__slogan">“{f["slogan"]}”</p><p class="quiz-result__why">{f["card"]}</p>'
     f'<p class="product-card__price"><strong>{brl(f["price"])}</strong> <span>lata 350 ml</span></p>'
@@ -745,7 +786,7 @@ def flavor_page(f):
     set_page(fn)
     premium = f.get('premium')
     full = f.get('full_name', f['name'])
-    fruits = ''.join(f'<div class="flavor-hero__fruit flavor-hero__fruit--{i+1}" data-parallax="{[0.3,0.5,0.2,0.6][i]}"><div class="float float--{(i%3)+1}">{fruit(fr, "Hero (frutas)", label=(i < 3))}</div></div>' for i, fr in enumerate(f['fruits']))
+    fruits = ''.join(f'<div class="flavor-hero__fruit flavor-hero__fruit--{i+1}" data-parallax="{[0.3,0.5,0.2,0.6][i]}" data-depth="{[1.6,2.2,1.2,2.6][i]}"><div class="float float--{(i%3)+1}">{fruit(fr, "Página do sabor → hero (frutas soltas)", eager=True)}</div></div>' for i, fr in enumerate(f['fruits']))
     facts = ''.join(f'<li>{icon(i)}{t}</li>' for i, t in f['facts'])
     sens = ''
     for k, (ic, title, text, mlabel, lvl) in enumerate(f['sensory']):
@@ -766,7 +807,11 @@ def flavor_page(f):
     diffs = ''.join(f'<li>{icon("check")}<span>{t}</span></li>' for t in f['diffs'])
     others = ''.join(product_card(o, 'Experimente também') for o in FLAVORS if o is not f)
     hl_num, hl_text = f['highlight']
-    big_strip = (f'<div class="premium-strip" aria-hidden="true">Edição limitada · Safra 2026 · <span>Serra Gaúcha</span> · Embalagem colecionável</div>' if premium else
+    premium_band = (f'''<section class="section section--tight premium-band" aria-label="Universo Uva Rosé"><div class="container premium-band__grid">
+  <figure class="premium-band__item" data-reveal>{slot("historia/vinhedo-bento-goncalves.webp", 3, 4, "Lata de FRIZZA Uva Rosé sobre um barril de madeira com vinhedos de Bento Gonçalves ao pôr do sol", "", "Uva Rosé → faixa premium", pos="86% 50%", parallax=True)}<figcaption>Vinhedos orgânicos de Bento Gonçalves</figcaption></figure>
+  <figure class="premium-band__item premium-band__item--dark" data-reveal data-delay=".15">{slot("sabores/uva-rose-premium.webp", 3, 4, "Lata de FRIZZA Uva Rosé em fundo escuro com luz dourada, pétalas e bolhas", "", "Uva Rosé → faixa premium", pos="88% 50%", parallax=True)}<figcaption>Bolhas finas, estilo espumante</figcaption></figure>
+</div></section>''' if premium else '')
+    big_strip = (f'<div class="premium-strip" aria-hidden="true">Edição limitada · Safra 2026 · <span>Serra Gaúcha</span> · Embalagem colecionável</div>' + premium_band if premium else
                  marquee([f['slogan'], f'FRIZZA {f["name"]}', *[t for _, t in f['facts']]], 'marquee--yellow' if f['slug'] != 'acai-guarana' else ''))
     rose_grad = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="rose-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8A0BF"/><stop offset="1" stop-color="#7B2D8E"/></linearGradient></defs></svg>' if premium else ''
     hero_bubbles = bubbles_canvas(100, color="255, 222, 236", mode="sparkle") if premium else bubbles_canvas(36)
@@ -780,7 +825,7 @@ def flavor_page(f):
   <div class="container flavor-hero__grid">
     <div style="position:relative;z-index:3">
       <p class="eyebrow" data-intro-fade>{f["badge"]}</p>
-      <h1 class="flavor-hero__name" id="fl-title"><img class="flavor-hero__logo" data-intro-fade src="assets/img/{"logo-frizza-branco.png" if f.get("header_light") else "logo-frizza.png"}" alt="FRIZZA" width="796" height="429"> <span data-split="chars" data-intro>{f["name"]}</span></h1>
+      <h1 class="flavor-hero__name" id="fl-title"><img class="flavor-hero__logo" data-intro-fade src="assets/img/marca/{"logo-frizza-branco.png" if f.get("header_light") else "logo-frizza.png"}" alt="FRIZZA" width="796" height="429"> <span data-split="chars" data-intro>{f["name"]}</span></h1>
       <p class="flavor-hero__slogan" data-intro-fade>“{f["slogan"]}”</p>
       <p class="flavor-hero__desc" data-intro-fade>{f["desc"]}</p>
       <p class="flavor-hero__price" data-intro-fade><strong>{brl(f["price"])}</strong> · lata 350 ml</p>
@@ -789,7 +834,7 @@ def flavor_page(f):
     </div>
     <div class="flavor-hero__visual">
       <span class="flavor-hero__disc" aria-hidden="true"></span>
-      <div class="flavor-hero__can" data-spin-can>{can(f, "Hero (lata grande girando no scroll)")}</div>
+      <div class="flavor-hero__can flavor-hero__photo" data-spin-can>{destaque(f, "Página do sabor → hero (gira no scroll)", eager=True, high=True)}</div>
       {fruits}
     </div>
   </div>
@@ -828,7 +873,7 @@ def flavor_page(f):
       <ul class="diff-list" role="list" data-stagger>{diffs}</ul>
     </div>
     <div class="occasion" data-reveal>
-      {slot(f"ocasiao-{f['slug']}.jpg", 1080, 1350, f"Pessoas aproveitando a FRIZZA {f['name']}: {f['occasion'][0].lower()}", f['occ_desc'], "Público e ocasião ideal", color=f['color'], reveal="mask")}
+      {slot(f"sabores/ocasiao-{f['slug']}.webp", 1080, 1350, f"Pessoas aproveitando a FRIZZA {f['name']}: {f['occasion'][0].lower()}", f['occ_desc'], "Página do sabor → ocasião ideal", color=f['color'], reveal="mask", pos={'laranja-bahia': '50% 40%', 'acai-guarana': '55% 40%', 'limao-hortela': '50% 35%', 'pessego-gengibre': '50% 40%', 'uva-rose': '22% 50%'}[f['slug']], parallax=True)}
       <div class="occasion__card"><h3>{f["occasion"][0]}</h3><p>{f["occasion"][1]}</p></div>
     </div>
   </div>
@@ -878,24 +923,24 @@ for f in FLAVORS:
 set_page('historia.html')
 TIMELINE = [
     ('2018', 'Nasce em Gramado', 'Dois amigos, uma cozinha e dezenas de receitas testadas. O primeiro lote de Laranja Bahia esgota numa feira de rua da cidade, em uma tarde.', '#FF6B2B', '#B3410C',
-     'timeline-2018.jpg', 'Os primeiros lotes da FRIZZA em uma barraca de feira de rua em Gramado', 'Barraca simples de feira de rua em Gramado com garrafas de vidro artesanais de refrigerante de laranja, plaquinha escrita à mão "FRIZZA", fundadores atendendo clientes sorridentes, arquitetura típica da Serra Gaúcha ao fundo, luz natural.'),
+     'historia/timeline-2018.webp', 'Os primeiros lotes da FRIZZA em uma barraca de feira de rua em Gramado', 'Barraca simples de feira de rua em Gramado com garrafas de vidro artesanais de refrigerante de laranja, plaquinha escrita à mão "FRIZZA", fundadores atendendo clientes sorridentes, arquitetura típica da Serra Gaúcha ao fundo, luz natural.'),
     ('2019', 'Das redes para os festivais', 'Os vídeos dos bastidores viralizam no Instagram e no TikTok. A FRIZZA vira presença confirmada em festivais de música e feiras orgânicas do Sul.', '#FFD23F', '#8A5A00',
-     'timeline-2019.jpg', 'Estande colorido da FRIZZA lotado em um festival de música ao ar livre', 'Estande colorido da FRIZZA em festival de música ao ar livre, fila de jovens diversos, latas e garrafas coloridas num balde de gelo, bandeirolas, luz do fim de tarde.'),
+     'onde-encontrar/festival-estande.webp', 'Estande de madeira da FRIZZA lotado em um festival de música ao ar livre', 'Estande colorido da FRIZZA em festival de música ao ar livre, fila de jovens diversos, latas e garrafas coloridas num balde de gelo, bandeirolas, luz do fim de tarde.'),
     ('2020', 'Loja online para todo o Brasil', 'Com o e-commerce, a FRIZZA passa a chegar em qualquer CEP do país, em caixas que viram brinquedo (e casinha de gato).', '#2EC4B6', '#0B7268',
-     'timeline-2020.jpg', 'Caixa da FRIZZA sendo aberta em casa, com latas coloridas e papel semente', 'Mãos abrindo uma caixa de papelão kraft da FRIZZA em casa, com cinco latas coloridas dentro, papel semente e bilhete escrito à mão, mesa de madeira, luz natural.'),
+     'historia/timeline-2020.webp', 'Pessoa abrindo uma lata de FRIZZA Laranja Bahia ao lado do notebook', 'Mãos abrindo uma caixa de papelão kraft da FRIZZA em casa, com cinco latas coloridas dentro, papel semente e bilhete escrito à mão, mesa de madeira, luz natural.'),
     ('2022', 'Mais de 200 pontos de venda', 'Empórios, cafés, restaurantes e mercados do Sul e Sudeste abrem suas geladeiras para a FRIZZA.', '#7B2D8E', '#7B2D8E',
-     'timeline-2022.jpg', 'Geladeira de um empório cheia de latas FRIZZA coloridas', 'Geladeira de vidro de um empório charmoso cheia de latas FRIZZA dos cinco sabores organizadas por cor, atendente sorrindo ao lado, luz quente.'),
+     'onde-encontrar/emporio-prateleira.webp', 'Prateleira de madeira de um empório cheia de latas FRIZZA dos cinco sabores', 'Geladeira de vidro de um empório charmoso cheia de latas FRIZZA dos cinco sabores organizadas por cor, atendente sorrindo ao lado, luz quente.'),
     ('2024', 'Chega a Uva Rosé', 'Em parceria com vinícolas de Bento Gonçalves, lançamos a edição especial Serra Gaúcha: para brindar sem precisar de motivo.', '#E8A0BF', '#9A3B67',
-     'timeline-2024.jpg', 'Lançamento da FRIZZA Uva Rosé em um vinhedo da Serra Gaúcha', 'Evento de lançamento elegante num vinhedo de Bento Gonçalves ao entardecer, latas rosé da FRIZZA Uva Rosé em uma mesa de madeira com taças e cachos de uva, pessoas brindando.'),
+     'sabores/ocasiao-uva-rose.webp', 'Brinde com taças de bebida rosada ao lado de uma lata de FRIZZA Uva Rosé', 'Evento de lançamento elegante num vinhedo de Bento Gonçalves ao entardecer, latas rosé da FRIZZA Uva Rosé em uma mesa de madeira com taças e cachos de uva, pessoas brindando.'),
     ('2028', 'A meta: a mais amada do Brasil', 'Queremos ser a marca de refrigerantes artesanais mais amada do país. Com fruta de verdade, gente de verdade e muito gás.', '#FF8C42', '#A3470C',
-     'timeline-2028.jpg', 'Ilustração do futuro: latas FRIZZA viajando pelo mapa do Brasil', 'Composição lúdica e colorida (ilustração 3D ou colagem) de latas FRIZZA voando sobre um mapa estilizado do Brasil com frutas, bolhas e confetes, gradiente tropical laranja e amarelo.'),
+     'historia/timeline-2028.svg', 'Ilustração: latas FRIZZA espalhadas pelo mapa do Brasil, com um coração no centro', 'Composição lúdica e colorida (ilustração 3D ou colagem) de latas FRIZZA voando sobre um mapa estilizado do Brasil com frutas, bolhas e confetes, gradiente tropical laranja e amarelo.'),
 ]
 tl_items = ''
 for i, (year, title, text, c, ink, file, alt, desc) in enumerate(TIMELINE):
     side = 'left' if i % 2 == 0 else 'right'
     tl_items += (f'<li class="timeline__item" style="--tl-c:{c};--tl-ink:{ink}"><span class="timeline__dot" aria-hidden="true"></span>'
                  f'<div class="timeline__card" data-reveal="{side}"><div><span class="timeline__year">{year}</span><h3>{title}</h3><p>{text}</p></div>'
-                 f'{slot(file, 1200, 900, alt, desc, "Linha do tempo " + year, color=c)}</div></li>')
+                 f'{slot(file, 1200, 900, alt, desc, "Nossa História → linha do tempo " + year, color=c, pos={"2024": "12% 50%", "2020": "50% 55%"}.get(year, "50% 45%"))}</div></li>')
 
 VALUES = [('heart', 'Autenticidade', 'A gente é o que parece: sem pose, sem letra miúda.', '#FFD23F'),
           ('brasil', 'Brasilidade', 'Fruta, gente e jeito brasileiro em cada lata.', '#2EC4B6'),
@@ -937,7 +982,10 @@ for key, name, what, (lon, lat), c, href, anchor, dx, dy in ORIGINS:
                    f'<circle class="pulse" cx="{x:.1f}" cy="{y:.1f}" r="9" fill="{c}" opacity=".5"/>'
                    f'<circle class="core" cx="{x:.1f}" cy="{y:.1f}" r="8" fill="{c}" stroke="#1A1A2E" stroke-width="2.5"/>'
                    f'<text x="{x+dx:.1f}" y="{y+dy:.1f}" text-anchor="{anchor}">{short}</text></a>')
-    legend += f'<li class="origin" data-origin="{key}" style="--o-c:{c}"><span class="origin__dot" aria-hidden="true"></span><div><b>{name}</b><span>{what}</span></div></li>'
+    _oi = {'reconcavo': ('historia/produtores-laranja-reconcavo.webp', 'Agricultor e menina colhendo laranjas no Recôncavo Baiano', '45% 50%'), 'para': ('historia/acai-colheita.webp', 'Mãos segurando um cacho de açaí recém-colhido na floresta', '75% 45%'), 'gramado': ('historia/horta-hortela-gramado.webp', 'Agricultora colhendo hortelã na horta da FRIZZA em Gramado', '60% 50%'), 'bento': ('historia/vinhedo-bento-goncalves.webp', 'Vinhedos de Bento Gonçalves ao pôr do sol', '72% 50%'), 'pelotas': ('elementos/fruta-pessego.svg', '', '50% 50%')}[key]
+    _thumb = img_tag(_oi[0], _oi[1], cls="origin__img" + (" origin__img--svg" if _oi[0].endswith(".svg") else ""), pos=_oi[2], decorative=_oi[0].endswith(".svg"))
+    register(_oi[0], 1, 1, _oi[1] or "(decorativo)", "", "Nossa História → origem dos sabores (mapa)", "foto" if not _oi[0].endswith(".svg") else "svg")
+    legend += f'<li class="origin" data-origin="{key}" style="--o-c:{c}"><span class="origin__thumb">{_thumb}<span class="origin__dot" aria-hidden="true"></span></span><div><b>{name}</b><span>{what}</span></div></li>'
 map_svg = (f'<svg class="brazil-map" data-map viewBox="0 -10 420 420" role="group" aria-label="Mapa do Brasil com a origem dos ingredientes de cada sabor FRIZZA">'
            f'<path class="land-shadow" d="{br_path}" transform="translate(10 12)"/><path class="land" d="{br_path}"/>{routes}{points_svg}</svg>')
 
@@ -948,7 +996,7 @@ hist = f'''
     <p class="eyebrow" data-intro-fade style="color:var(--preto-suave)">Nossa história</p>
     <h1 class="page-hero__title" id="hist-title" data-split="words" data-intro>Cada garrafa é uma mini viagem pelo Brasil</h1>
     <p class="page-hero__lead" data-intro-fade>Do Recôncavo Baiano à Serra Gaúcha, passando pelos rios do Pará: a FRIZZA nasceu para provar que dá para ser gostoso, divertido e consciente ao mesmo tempo.</p>
-    <div class="history-hero__media" data-intro-fade>{slot("historia-hero.jpg", 2100, 900, "Paisagem da Serra Gaúcha em Gramado ao amanhecer, com a pequena fábrica da FRIZZA entre araucárias", "Foto panorâmica de Gramado (RS) ao amanhecer com névoa leve, araucárias, hortênsias e uma pequena fábrica/ateliê de madeira e vidro com o letreiro FRIZZA, cores vivas, luz natural dourada.", "Hero", color="#FFD23F")}</div>
+    <div class="history-hero__media" data-intro-fade>{slot("historia/historia-hero.webp", 2100, 900, "Lata de FRIZZA Uva Rosé sobre uma cerca de madeira com hortênsias coloridas e araucárias na névoa da Serra Gaúcha", "", "Nossa História → hero", color="#FFD23F", pos="50% 55%", eager=True, high=True, parallax=True)}</div>
   </div>
   {wave("#FAFAFA")}
 </section>
@@ -1002,12 +1050,12 @@ hist = f'''
         <h2 id="sus-title" data-split="words">Fazer bem feito, do pé de fruta à garrafa de volta</h2>
         <p class="lead" data-reveal>A gente não é perfeito, e não vai fingir que é. Mas leva a sério cada escolha que dá pra fazer melhor, e conta tudo por aqui, com números.</p>
       </div>
-      {slot("sustentabilidade-produtores.jpg", 1080, 1350, "Agricultora parceira colhendo laranjas no Recôncavo Baiano", "Agricultora familiar sorridente colhendo laranjas bahia em um pomar no Recôncavo Baiano, cesto de palha cheio, luz natural da manhã, cores vivas, retrato documental genuíno.", "Sustentabilidade", color="#2EC4B6", reveal="mask")}
+      {slot("historia/ribeirinhos-acai.webp", 1080, 1350, "Ribeirinho subindo num açaizeiro enquanto uma mulher organiza cestos de açaí numa canoa, com casas de palafita ao fundo", "", "Nossa História → sustentabilidade", color="#2EC4B6", reveal="mask", pos="64% 50%", parallax=True)}
     </div>
     <ul class="sust" role="list" data-stagger>
-      <li class="sust__card">{icon("hands")}<h3>Pequenos produtores</h3><p>Compramos direto de 23 famílias de agricultores e cooperativas, com preço justo e contrato de longo prazo.</p></li>
-      <li class="sust__card">{icon("tree")}<h3>Compensação com árvores</h3><p>A cada lote produzido, plantamos árvores nativas em parceria com projetos de reflorestamento da Mata Atlântica.</p></li>
-      <li class="sust__card">{icon("recycle")}<h3>Logística reversa</h3><p>Garrafas de vidro voltam para a fábrica, são higienizadas e enchidas de novo. Devolva nos pontos de coleta e ganhe desconto.</p></li>
+      <li class="sust__card">{slot("historia/rio-para-aerea.webp", 16, 10, "Vista aérea de um rio amazônico com casas ribeirinhas entre a floresta ao amanhecer", "", "Nossa História → card pequenos produtores", cls="sust__img")}{icon("hands")}<h3>Pequenos produtores</h3><p>Compramos direto de 23 famílias de agricultores e cooperativas, com preço justo e contrato de longo prazo.</p></li>
+      <li class="sust__card">{slot("historia/mudas-arvores.webp", 16, 10, "Voluntários plantando mudas de árvores nativas em uma área de reflorestamento", "", "Nossa História → card árvores", cls="sust__img", pos="40% 60%")}{icon("tree")}<h3>Compensação com árvores</h3><p>A cada lote produzido, plantamos árvores nativas em parceria com projetos de reflorestamento da Mata Atlântica.</p></li>
+      <li class="sust__card">{slot("historia/reciclagem-festival.webp", 16, 10, "Jovem sorridente depositando uma lata numa estação de reciclagem FRIZZA em um festival", "", "Nossa História → card logística reversa", cls="sust__img", pos="45% 50%")}{icon("recycle")}<h3>Logística reversa</h3><p>Garrafas de vidro voltam para a fábrica, são higienizadas e enchidas de novo. Devolva nos pontos de coleta e ganhe desconto.</p></li>
     </ul>
   </div>
 </section>
@@ -1092,23 +1140,26 @@ _d = [s_ for s_ in STORES if s_[2] == DEFAULT_STORE][0]
 DEFAULT_Q = maps_query(_d[0], _d[1], _d[2], _d[4]) + ', Brasil'
 chips = '<button class="filter-btn" type="button" data-uf="todos" aria-pressed="true">Todos</button>' + ''.join(
     f'<button class="filter-btn" type="button" data-uf="{uf}" aria-pressed="false" aria-label="{UF_NAMES[uf]}">{uf}</button>' for uf in UF_NAMES)
-EVENTS = [('festival-01.jpg', 'Janeiro', 'Festival Verão Orgânico', 'Florianópolis · SC', 'Praia, música ao vivo e estande FRIZZA com degustação gelada dos 5 sabores.',
+EVENTS = [('onde-encontrar/festival-estande.webp', 'Janeiro', 'Festival Verão Orgânico', 'Florianópolis · SC', 'Praia, música ao vivo e estande FRIZZA com degustação gelada dos 5 sabores.',
            'Festival de verão na praia em Florianópolis, estande colorido da FRIZZA com guarda-sol, pessoas diversas em roupas de praia provando refrigerante, mar azul ao fundo, luz forte do meio-dia.'),
-          ('festival-02.jpg', 'Junho', 'Feira Brasil Orgânico', 'São Paulo · SP', 'Onde levamos o prêmio de Melhor Refrigerante Artesanal em 2023. Vem brindar com a gente!',
+          ('historia/reciclagem-festival.webp', 'Junho', 'Feira Brasil Orgânico', 'São Paulo · SP', 'Onde levamos o prêmio de Melhor Refrigerante Artesanal em 2023. Vem brindar com a gente!',
            'Feira de produtos orgânicos em pavilhão arejado em São Paulo, estande de madeira da FRIZZA com garrafas e frutas expostas, visitantes provando em copinhos, luz natural.'),
-          ('festival-03.jpg', 'Julho', 'Festival de Inverno da Serra', 'Gramado · RS', 'Em casa! Lançamentos de safra da Uva Rosé, oficinas de mocktail e muita bolha.',
+          ('historia/historia-hero.webp', 'Julho', 'Festival de Inverno da Serra', 'Gramado · RS', 'Em casa! Lançamentos de safra da Uva Rosé, oficinas de mocktail e muita bolha.',
            'Festival de inverno ao ar livre em Gramado à noite, luzinhas penduradas, pessoas agasalhadas e sorridentes segurando latas FRIZZA, barracas de madeira, clima aconchegante.')]
-events = ''.join(f'<li class="event">{slot(file, 1200, 800, f"{title}, {where}", desc, "Festivais e feiras", color=["#2EC4B6","#FFD23F","#E8A0BF"][i])}'
+events = ''.join(f'<li class="event">{slot(file, 1200, 800, ["Estande de madeira da FRIZZA lotado em um festival ao ar livre", "Público de festival ao ar livre e estação de reciclagem de latas da FRIZZA", "Lata de FRIZZA Uva Rosé com hortênsias e araucárias na Serra Gaúcha"][i], desc, "Onde Encontrar → festivais e feiras", color=["#2EC4B6","#FFD23F","#E8A0BF"][i], pos=["50% 50%", "50% 50%", "100% 50%"][i])}'
                  f'<div class="event__body"><p class="event__date">{icon("tent")}{month} · {where}</p><h3>{title}</h3><p>{txt}</p></div></li>'
                  for i, (file, month, title, where, txt, desc) in enumerate(EVENTS))
 onde = f'''
 <section class="page-hero" data-theme="laranja-bahia" aria-labelledby="onde-title">
   {bubbles_canvas(30)}
-  <div class="container" style="position:relative;z-index:2">
+  <div class="container grid-2 onde-hero" style="position:relative;z-index:2">
+    <div>
     <p class="eyebrow" data-intro-fade>Mais de 200 pontos no Sul e Sudeste</p>
     <h1 class="page-hero__title" id="onde-title" data-split="chars" data-intro>Onde encontrar</h1>
     <p class="page-hero__lead" data-intro-fade>Procure pela sua cidade ou estado e descubra a geladeira mais próxima com FRIZZA. Prefere receber em casa? Compre aqui no site e a gente entrega no Brasil todo.</p>
     <div class="btn-row" style="margin-top:28px" data-intro-fade>{btn("Comprar online", "sabores.html", "dark", ic="cart", ic_first=True)}</div>
+    </div>
+    <div data-intro-fade>{slot("onde-encontrar/emporio-prateleira.webp", 4, 3, "Prateleira de madeira de um empório cheia de latas FRIZZA dos cinco sabores, com plantas ao redor", "", "Onde Encontrar → hero", pos="35% 50%", eager=True, high=True, parallax=True)}</div>
   </div>
   {wave("#FAFAFA")}
 </section>
@@ -1158,13 +1209,13 @@ page('onde-encontrar.html', 'Onde Encontrar | FRIZZA Refrigerantes',
 
 # =================================================================== #FRIZZALOVERS
 set_page('frizzalovers.html')
-pols = ''.join(f'<div class="polaroid polaroid--{i+1}" data-parallax="{[0.3,0.5,0.4,0.2][i]}">{slot(LOVERS[j][0], LOVERS[j][1], LOVERS[j][2], "Foto da comunidade #FRIZZALOVERS", LOVERS[j][5], "Hero (polaroids)", style="--ar:1 / 1;")}</div>'
-               for i, j in enumerate([1, 4, 7, 10]))
+pols = ''.join(f'<div class="polaroid polaroid--{i+1}" data-parallax="{[0.3,0.5,0.4,0.2][i]}">{slot(f"comunidade/polaroid-{i+1:02d}.webp", 1, 1, "", "", "#FRIZZALOVERS → hero (polaroids)", eager=True, decorative=True)}</div>'
+               for i in range(4))
 gallery = ''
-for (file, w, h, user, cap, desc) in LOVERS:
-    alt = f'Foto de @{user}: {cap}'
+for (file, w, h, user, cap, desc, pos) in LOVERS:
+    alt = f'Foto de @{user}: {desc}'
     gallery += (f'<li class="masonry__item"><button class="masonry__btn" type="button" data-lightbox data-user="@{user}" data-caption="{esc(cap)}" data-alt="{esc(alt)}" aria-label="Ampliar foto de @{user}" data-cursor="ver">'
-                f'{slot(file, w, h, alt, desc, "Galeria masonry + lightbox")}'
+                f'{slot(file, w, h, alt, desc, "#FRIZZALOVERS → galeria + lightbox", pos=pos)}'
                 f'<span class="masonry__meta" aria-hidden="true"><b>{icon("instagram")}@{user}</b><span>{cap}</span></span></button></li>')
 lovers = f'''
 <section class="lovers-hero on-dark" aria-labelledby="lov-title">
@@ -1248,7 +1299,7 @@ contato = f'''
       <h1 class="page-hero__title" id="ct-title" data-split="chars" data-intro>Fala com a gente!</h1>
       <p class="page-hero__lead" data-intro-fade>Dúvida, sugestão, revenda ou só vontade de dar um oi? A gente responde rapidinho, de verdade. O jeito mais rápido é pelo WhatsApp.</p>
     </div>
-    <div data-intro-fade>{slot("contato-atendimento.jpg", 1200, 900, "Atendente sorridente da FRIZZA respondendo mensagens no celular", "Atendente jovem e sorridente da FRIZZA, com avental colorido da marca, respondendo mensagens no celular numa bancada com latas coloridas e plantas, ambiente iluminado com luz natural, sensação acolhedora.", "Hero", color="#FF6B2B")}</div>
+    <div data-intro-fade>{slot("comunidade/contato-hero.webp", 1200, 900, "Duas amigas rindo ao ar livre, cada uma com uma lata FRIZZA na mão", "", "Contato → hero", color="#FF6B2B", pos="50% 22%", eager=True, high=True, parallax=True)}</div>
   </div>
   {wave("#FAFAFA")}
 </section>
@@ -1454,27 +1505,55 @@ page('checkout.html', 'Finalizar compra | FRIZZA Refrigerantes',
 for name, content in PAGES:
     open(os.path.join(ROOT, name), 'w').write(content)
 
-# README de imagens
+# README de imagens (gerado a partir do que cada página usa)
+present = [(f, it) for f, it in IMAGES.items() if img_exists(f)]
+missing = [(f, it) for f, it in IMAGES.items() if not img_exists(f)]
+def uses_md(it):
+    u = it['uses']
+    return '<br>'.join(u[:5]) + (f'<br>(+{len(u) - 5})' if len(u) > 5 else '')
 lines = ['# Imagens do site FRIZZA', '',
-         'Todas as imagens do site entram por aqui. **Basta salvar o arquivo nesta pasta (`/assets/img/`) com o nome exato da tabela** que ele aparece sozinho no lugar do placeholder (o `main.js` testa se o arquivo existe e troca automaticamente).', '',
-         '## Diretrizes gerais (briefing)', '',
-         '- **Estilo de fotografia:** luz natural, cores vivas e saturadas, ambientes ao ar livre (praia, parque, varanda, piquenique, festival), pessoas diversas e genuínas (idades, etnias e corpos variados), nada de pose artificial de banco de imagem.',
-         '- **Paleta para guiar as cenas:** Laranja Vibrante #FF6B2B, Amarelo Solar #FFD23F, Verde Menta #2EC4B6, Roxo Açaí #7B2D8E; sabores: Laranja Bahia #FF8C42, Açaí com Guaraná #5B2C6F, Limão com Hortelã #00BFA6, Pêssego com Gengibre #FFAB76, Uva Rosé #E8A0BF.',
-         '- **PNG transparente** (latas, frutas, logotipos): recorte limpo, sem sombra projetada (o site aplica sombra), margem pequena ao redor. As latas flutuam e giram nas animações.',
-         '- **Fotos (JPG):** exporte em qualidade ~80% e, se possível, até ~400 KB cada. Os tamanhos abaixo são os recomendados; manter a **proporção** é o que importa.',
-         '- A latinha é sempre de **350 ml**. Rótulo com o logo FRIZZA e o nome do sabor, na cor do sabor.', '',
-         f'Total: **{len(IMAGES)} arquivos**.', '']
-groups = [('PNG com fundo transparente', 'png'), ('Fotos e imagens', 'foto')]
-for title, kind in groups:
-    lines += [f'## {title}', '', '| Arquivo | Tamanho (proporção) | Onde aparece | Texto alternativo (alt) | O que a imagem deve mostrar (prompt para IA) |', '|---|---|---|---|---|']
-    for file, it in IMAGES.items():
-        if it['kind'] != kind: continue
-        uses = '<br>'.join(it['uses'][:6]) + (f'<br>(+{len(it["uses"])-6} usos)' if len(it['uses']) > 6 else '')
-        lines.append(f'| `{file}` | {it["w"]}×{it["h"]} ({ratio(it["w"], it["h"]).replace(" ", "")}) | {uses} | {it["alt"]} | {it["desc"]} |')
-    lines.append('')
-lines += ['## Observações', '',
-          '- O **logotipo** tem duas versões: `logo-frizza.png` (colorida, fundos claros) e `logo-frizza-branco.png` (branca, footer e topo das páginas com fundo escuro). Enquanto não existirem, o site mostra a palavra "FRIZZA" em Fredoka com a bolha animada no lugar do pingo do "i".',
-          '- As fotos de `lovers-01.jpg` a `lovers-06.jpg` também aparecem **recortadas em quadrado** no feed da Home. Deixe o assunto principal no centro.',
-          '- Se trocar o nome de algum arquivo, troque também o atributo `data-img` no HTML.', '']
-open(os.path.join(ROOT, 'assets/img/README.md'), 'w').write('\n'.join(lines))
-print(f'{len(PAGES)} páginas, {len(IMAGES)} imagens')
+         'Imagens finais geradas pelos designers, já **otimizadas e aplicadas** nas páginas. Os arquivos enviados originalmente estão em `originais/` (não são usados no site).', '',
+         '## Organização', '',
+         '| Pasta | Conteúdo |', '|---|---|',
+         '| `latas/` | Latas de cada sabor (versão com gotas e `-classica`). WebP; **não têm fundo transparente**, por isso aparecem como "card" de produto. |',
+         '| `sabores/` | Foto "lata + frutas" de cada sabor (`-destaque`), fotos de ocasião e foto premium da Uva Rosé. |',
+         '| `historia/` | Gramado, produtores, ribeirinhos, horta, vinhedo, mudas, reciclagem e a ilustração 2028 (SVG). |',
+         '| `comunidade/` | Fotos #FRIZZALOVERS (galeria, feed da Home, polaroids) e foto do Contato. |',
+         '| `onde-encontrar/` | Estande em festival e prateleira de empório. |',
+         '| `elementos/` | Frutas, folhas e gelo em SVG (criados para o site, decorativos). |',
+         '| `marca/` | Logos (colorido e branco), favicon (32/180/512) e imagem de compartilhamento (Open Graph). |',
+         '| `originais/` | Arquivos originais enviados, sem alteração. |', '',
+         '**Otimização:** fotos em WebP qualidade 80, largura máxima de 2000 px nos heros e 1200 px no resto. Scripts em `ferramentas/otimizar_imagens.py` e `ferramentas/gerar_elementos_svg.py`.', '',
+         '**Para trocar uma imagem:** salve o novo arquivo com o **mesmo nome e pasta** e rode `python3 ferramentas/gerar_paginas.py .` (o gerador lê as dimensões reais e atualiza `width`/`height`).', '',
+         f'## Em uso no site ({len(present)} arquivos)', '',
+         '| Arquivo | Onde aparece | Texto alternativo |', '|---|---|---|']
+for f, it in present:
+    lines.append(f'| `{f}` | {uses_md(it)} | {it["alt"]} |')
+lines += ['', f'## Faltando ({len(missing)})', '',
+          'Esses lugares continuam com placeholder (borda tracejada + nome do arquivo). Prompts prontos em [`FALTANDO.md`](FALTANDO.md).', '']
+for f, it in missing:
+    lines.append(f'- `{f}` → {uses_md(it)} ({it["w"]}×{it["h"]})')
+open(os.path.join(ROOT, 'assets/img/README.md'), 'w').write('\n'.join(lines) + '\n')
+
+PROMPTS = {
+    'historia/timeline-2018.webp': 'Candid documentary photo of a small handmade street-market stall in Gramado, southern Brazil (Serra Gaúcha), with rustic wooden table, colorful craft soda cans in orange, purple, teal, peach and pink, a hand-lettered chalk sign reading "FRIZZA", two young founders (a man and a woman, around 30, diverse) smiling and serving customers, European-style timber houses and hydrangeas in the background, natural soft daylight, vivid saturated colors, fresh tropical mood, genuine people, shot on 35mm, 4:3.',
+}
+OPTIONAL = [
+    ('historia/fundadores.webp', 'Prévia da história (Home) e Nossa História — hoje usa a foto da horta em Gramado', '4:5 (1080×1350)',
+     'Warm candid portrait of the two young founders of an artisanal Brazilian soda brand (a man and a woman, around 30, diverse, genuine smiles) inside their small craft soda workshop in Gramado, southern Brazil, wooden workbench with glass bottles and colorful cans, crates of oranges and fresh mint, natural window light, vivid saturated colors, cozy and authentic, shot on 35mm, 4:5 vertical.'),
+    ('latas/lata-<sabor>.png (5 arquivos)', 'Hero da Home, cards, carrinho — para as latas flutuarem sem o fundo branco', '1:2 (800×1600)',
+     'Studio product shot of a single 350ml aluminum soda can, label "FRIZZA" with the flavor artwork (orange / açaí / lemon-mint / peach-ginger / pink rosé grape), front view slightly angled, fresh condensation droplets, soft studio lighting, isolated on a fully transparent background (PNG with alpha), no shadow, no reflection, clean edges, 1:2 vertical.'),
+]
+fl = ['# Imagens que faltam', '',
+      'Lista gerada automaticamente pelo `ferramentas/gerar_paginas.py`. Gere a imagem, salve com o **nome e a pasta indicados** dentro de `assets/img/` e rode o gerador de novo (ou peça para mim).', '',
+      'Estilo do briefing: luz natural, cores vivas e saturadas, frescor, tropical, pessoas diversas e genuínas.', '']
+if missing:
+    fl += ['## Obrigatórias (o site mostra placeholder)', '']
+    for f, it in missing:
+        fl += [f'### `{f}`', '', f'- **Onde entra:** {", ".join(it["uses"])}', f'- **Proporção:** {ratio(it["w"], it["h"]).replace(" ", "")} ({it["w"]}×{it["h"]} px)',
+               f'- **Alt:** {it["alt"]}', '', '**Prompt (EN):**', '', '```', PROMPTS.get(f, it['desc']), '```', '']
+fl += ['## Recomendadas (melhorariam o resultado)', '']
+for f, where, prop, prompt in OPTIONAL:
+    fl += [f'### `{f}`', '', f'- **Onde entra:** {where}', f'- **Proporção:** {prop}', '', '**Prompt (EN):**', '', '```', prompt, '```', '']
+open(os.path.join(ROOT, 'assets/img/FALTANDO.md'), 'w').write('\n'.join(fl))
+print(f'{len(PAGES)} páginas, {len(present)} imagens em uso, {len(missing)} faltando')

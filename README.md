@@ -44,20 +44,15 @@ Depois acesse <http://localhost:8000>. No VS Code, a extensão *Live Server* faz
 
 ---
 
-## 3. Como trocar as imagens (é só salvar com o nome certo!)
+## 3. Imagens
 
-Todas as imagens ainda são **placeholders**: caixas com gradiente, borda tracejada e uma etiqueta com o **nome do arquivo esperado e o tamanho recomendado** (ex.: `historia-fundadores.jpg — 1080×1350 px`).
+As imagens finais dos designers já estão aplicadas, otimizadas em WebP e organizadas em pastas dentro de `assets/img/` (`latas/`, `sabores/`, `historia/`, `comunidade/`, `onde-encontrar/`, `elementos/`, `marca/`). Os arquivos originais ficam guardados em `assets/img/originais/` e não são usados no site.
 
-1. Abra **[`assets/img/README.md`](assets/img/README.md)**. Lá está a tabela com as **52 imagens** do site: nome do arquivo, tamanho, onde aparece, texto alternativo e uma **descrição pronta para gerar com IA**.
-2. Gere/edite a imagem e salve **dentro de `/assets/img/`** com **exatamente** o nome da tabela.
-3. Pronto. O `main.js` percebe que o arquivo existe, carrega a imagem e esconde o placeholder sozinho. O `alt` (acessibilidade) já está escrito.
-
-Dicas:
-- **Latas, frutas e logos** devem ser **PNG com fundo transparente** (eles flutuam e giram nas animações).
-- Enquanto o logotipo não chega, o site mostra a palavra **FRIZZA** em Fredoka com uma **bolha animada no lugar do pingo do "i"**. Existem duas versões: `logo-frizza.png` (colorida) e `logo-frizza-branco.png` (footer e topo das páginas escuras).
-- O favicon provisório é `assets/icons/favicon.svg`. O `favicon.png` (512×512) é usado como ícone de app.
-
----
+- **[`assets/img/README.md`](assets/img/README.md)**: lista de cada imagem em uso, onde aparece e o texto alternativo.
+- **[`assets/img/FALTANDO.md`](assets/img/FALTANDO.md)**: o que ainda falta, com prompt pronto (em inglês) para gerar na IA.
+- **Para trocar ou adicionar uma imagem:** salve o arquivo com o **mesmo nome e pasta** e rode `python3 ferramentas/gerar_paginas.py .`. O gerador lê as dimensões reais e escreve `width`/`height`, `alt`, `loading="lazy"` e `fetchpriority` nos heros.
+- Para reprocessar os originais (WebP, recortes das latas, favicon): `python3 ferramentas/otimizar_imagens.py`. Frutas, folhas e gelo são SVG próprios (`ferramentas/gerar_elementos_svg.py`).
+- As latas enviadas **não têm fundo transparente**. Por isso aparecem como "card" de produto, com cantos arredondados e sombra. Com PNGs transparentes elas passam a flutuar soltas: basta salvar `latas/lata-<sabor>.png` e ajustar a extensão no gerador.
 
 ## 4. Identidade visual aplicada
 

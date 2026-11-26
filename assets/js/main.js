@@ -492,7 +492,37 @@
   /* ---------------------------------------------------------------------
      10. HOME — hero com parallax do mouse + vitrine horizontal fixada
      ------------------------------------------------------------------- */
+  /* Parallax por mouse (frutas, gelo e folhas) também no hero das páginas de sabor */
+  function initMouseParallax(hero) {
+    const layers = $$('[data-depth]', hero);
+    if (!layers.length || !finePointer) return;
+    const setters = layers.map((l) => ({
+      x: gsap.quickTo(l, 'x', { duration: 1.1, ease: 'power3' }),
+      y: gsap.quickTo(l, 'y', { duration: 1.1, ease: 'power3' }),
+      d: parseFloat(l.dataset.depth)
+    }));
+    hero.addEventListener('pointermove', (e) => {
+      const r = hero.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5;
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      setters.forEach((s) => { s.x(px * s.d * 60); s.y(py * s.d * 40); });
+    });
+    hero.addEventListener('pointerleave', () => setters.forEach((s) => { s.x(0); s.y(0); }));
+  }
+
+  /* Parallax leve dentro das fotos grandes (a imagem desliza dentro da moldura) */
+  function initPhotoParallax() {
+    if (!motion) return;
+    $$('.img-slot.is-parallax img').forEach((img) => {
+      gsap.fromTo(img, { yPercent: -6 }, {
+        yPercent: 6, ease: 'none',
+        scrollTrigger: { trigger: img.parentElement, start: 'top bottom', end: 'bottom top', scrub: true }
+      });
+    });
+  }
+
   function initHero() {
+    if (motion) $$('.flavor-hero').forEach(initMouseParallax);
     const hero = $('[data-hero]');
     if (!hero || !motion) return;
     const layers = $$('[data-depth]', hero);
@@ -925,7 +955,7 @@
     const fruits = $$('.hero__fruit .png-slot, .hero__drop');
     if (fruits.length) tl.from(fruits, { scale: 0, rotation: -90, duration: 1, ease: 'back.out(2)', stagger: 0.07 }, 0.7);
 
-    const flavorCan = $('[data-spin-can] .png-slot');
+    const flavorCan = $('[data-spin-can] .png-slot, [data-spin-can] .img-slot');
     if (flavorCan) tl.from(flavorCan, { y: 260, rotation: -35, opacity: 0, duration: 1.5, ease: 'back.out(1.3)' }, 0.1);
     const flavorFruits = $$('.flavor-hero__fruit .png-slot');
     if (flavorFruits.length) tl.from(flavorFruits, { scale: 0, rotation: 120, duration: 1, ease: 'back.out(2)', stagger: 0.1 }, 0.6);
@@ -981,7 +1011,7 @@
     subtotal() { return this.items.reduce((a, i) => a + i.qty * i.price, 0); }
   };
   Cart.load();
-  const productFrom = (el) => ({ id: el.dataset.id, name: el.dataset.name, price: parseFloat(el.dataset.price), color: el.dataset.color, img: el.dataset.img, url: el.dataset.url });
+  const productFrom = (el) => ({ id: el.dataset.id, name: el.dataset.name, price: parseFloat(el.dataset.price), color: el.dataset.color, img: el.dataset.cartImg, url: el.dataset.url });
   let openCart = () => {};
 
   function cartThumb(item) {
@@ -1436,6 +1466,7 @@
   safe('manifesto', initManifesto);
   safe('contadores', initCounters);
   safe('hero', initHero);
+  safe('parallax das fotos', initPhotoParallax);
   safe('vitrine', initVitrine);
   safe('sabor', initFlavor);
   safe('linha do tempo', initTimeline);
